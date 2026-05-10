@@ -30,7 +30,7 @@ from .factory import (
     register_connection_type,
 )
 from .nodes import Node
-from .systems import ConnectionEntry, HydraulicSystem
+from .systems import Connection, ConnectionEntry, HydraulicSystem
 
 __all__ = [
     "Pipe",
@@ -54,6 +54,7 @@ __all__ = [
     "create_connection",
     "create_connection_from_spec",
     "export_connection_spec",
+    "Connection",
     "Node",
     "ConnectionEntry",
     "HydraulicSystem",

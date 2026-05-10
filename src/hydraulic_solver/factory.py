@@ -3,8 +3,6 @@
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
-from src.contracts import Connection
-
 from .connections import (
     DW_pipe,
     FixedKQn_pipe,
@@ -13,7 +11,7 @@ from .connections import (
     PolynomialRegressionConnection,
 )
 from .nodes import Node
-from .systems import HydraulicSystem
+from .systems import Connection, HydraulicSystem
 
 
 ConnectionFactory = Callable[..., Connection]

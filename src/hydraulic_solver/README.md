@@ -12,7 +12,8 @@ rates from pairs of nodal heads.
 
 - `connections.py`: hydraulic formulas plus connection objects.
 - `nodes.py`: node data model.
-- `systems.py`: canonical network container and residual helpers.
+- `systems.py`: the `Connection` contract, the canonical network
+  container, and residual helpers.
 - `factory.py`: connection registry and JSON-friendly builders.
 - `solvers/`: solver orchestration, currently exposing two SciPy
   root-based steady-state helpers.
@@ -76,6 +77,9 @@ pipe.getHeadVariation(Q)
 
 ### Systems
 
+`systems.py` now groups the shared `Connection` contract together with
+the assembled-network objects.
+
 `HydraulicSystem` stores nodes and ordered connection entries. It knows
 how to:
 
@@ -88,6 +92,13 @@ how to:
 `ConnectionEntry` binds one connection object to two ordered endpoint
 node ids. Its main job is preserving sign convention when a nodal
 balance asks for flow leaving either endpoint.
+
+`Connection` is the abstract interface that all hydraulic elements must
+implement:
+
+```python
+connection.getFlowRate(H1, H2)
+```
 
 ### Solvers
 

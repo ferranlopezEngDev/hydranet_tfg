@@ -34,7 +34,6 @@ the examples in `test/`.
 ## Repository Map
 
 - `src/`: Python implementation.
-- `src/contracts/`: shared abstract contracts.
 - `src/hydraulic_solver/`: self-contained hydraulic formulas, nodes,
   systems, factories, and solver orchestration.
 - `test/pipe_model_testing/`: plots for elemental pipe behavior.
@@ -123,7 +122,6 @@ Compile-check the code:
 ## Documentation Map
 
 - [src/README.md](src/README.md): implementation package map.
-- [src/contracts/README.md](src/contracts/README.md): shared contracts.
 - [src/hydraulic_solver/README.md](src/hydraulic_solver/README.md):
   solver-facing architecture.
 - [src/hydraulic_solver/solvers/README.md](src/hydraulic_solver/solvers/README.md):

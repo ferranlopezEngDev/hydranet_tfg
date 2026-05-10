@@ -1,13 +1,20 @@
-"""System containers for assembled H-based hydraulic networks."""
+"""System contracts and containers for assembled H-based hydraulic networks."""
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping, Sequence
 from math import isfinite
 
-from src.contracts import Connection
-
 from .nodes import Node
+
+
+class Connection(ABC):
+    """Base interface for hydraulic elements written in H-formulation."""
+
+    @abstractmethod
+    def getFlowRate(self, H1: float, H2: float) -> float:
+        """Return the operating-point flow rate for the given end heads."""
 
 
 class ConnectionEntry:
@@ -607,4 +614,4 @@ class HydraulicSystem:
         )
 
 
-__all__ = ["ConnectionEntry", "HydraulicSystem"]
+__all__ = ["Connection", "ConnectionEntry", "HydraulicSystem"]

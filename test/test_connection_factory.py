@@ -7,7 +7,6 @@ import unittest
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.contracts import Connection
 from src.hydraulic_solver.connections import FixedKQn_pipe
 from src.hydraulic_solver.factory import (
     create_connection,
@@ -18,6 +17,7 @@ from src.hydraulic_solver.factory import (
     list_connection_types,
     register_connection_type,
 )
+from src.hydraulic_solver.systems import Connection
 
 
 class _ScaledHeadDifferenceConnection(Connection):

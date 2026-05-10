@@ -4,8 +4,6 @@ This folder contains the Python implementation of Hydranet.
 
 ## Packages
 
-- `contracts/`: minimal abstract interfaces shared across solver-facing
-  components.
 - `hydraulic_solver/`: self-contained hydraulic formulas, connection
   objects, nodes, systems, factories, and solver orchestration.
 - `utils/`: lightweight reusable helpers.
@@ -15,11 +13,10 @@ This folder contains the Python implementation of Hydranet.
 
 The intended layering is:
 
-1. `contracts/` defines small stable interfaces.
-2. `hydraulic_solver/` contains the hydraulic implementation in larger,
+1. `hydraulic_solver/` contains the hydraulic implementation in larger,
    self-contained scripts.
-3. `utils/` remains a reusable support layer.
-4. `test/` imports from `src/`, not the other way around.
+2. `utils/` remains a reusable support layer.
+3. `test/` imports from `src/`, not the other way around.
 
 This keeps the code easy to reason about while reducing cross-module
 dependencies inside the hydraulic layer.
@@ -46,7 +43,7 @@ from src.hydraulic_solver.connections import (
 )
 from src.hydraulic_solver.factory import create_connection
 from src.hydraulic_solver.nodes import Node
-from src.hydraulic_solver.systems import HydraulicSystem
+from src.hydraulic_solver.systems import Connection, HydraulicSystem
 from src.hydraulic_solver.factory import (
     build_system_from_spec,
     export_system_spec,

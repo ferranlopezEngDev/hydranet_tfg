@@ -13,7 +13,7 @@ from math import exp, log, log10, pi
 import numpy as np
 from scipy.optimize import brentq, newton
 
-from src.contracts import Connection
+from .systems import Connection
 
 
 def validate_pipe_geometry(
