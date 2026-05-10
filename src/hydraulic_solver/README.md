@@ -1,8 +1,8 @@
 # `src/hydraulic_solver`
 
-This package contains the solver-facing hydraulic model. It is the layer
-where pure formulas from `src/physics/` become objects that can be
-assembled into a network and solved.
+This package contains the solver-facing hydraulic model. The hydraulic
+formulas now live alongside the connection objects that use them so the
+core context stays concentrated in a few larger scripts.
 
 The current formulation is H-based: node heads `H` are the unknowns of
 the assembled problem, while connections compute operating-point flow
@@ -10,11 +10,10 @@ rates from pairs of nodal heads.
 
 ## Package Map
 
-- `connections/`: hydraulic elements that implement `getFlowRate(H1, H2)`.
-- `connections/factory.py`: registry to create connections from string
-  type keys.
-- `systems/`: node object, canonical network container, and residual helpers.
-- `systems/builder.py`: JSON-friendly system build/export helpers.
+- `connections.py`: hydraulic formulas plus connection objects.
+- `nodes.py`: node data model.
+- `systems.py`: canonical network container and residual helpers.
+- `factory.py`: connection registry and JSON-friendly builders.
 - `solvers/`: solver orchestration, currently exposing two SciPy
   root-based steady-state helpers.
 
@@ -22,7 +21,8 @@ New code should prefer the short paths:
 
 ```python
 from src.hydraulic_solver.connections import FixedKQn_pipe
-from src.hydraulic_solver.systems import HydraulicSystem, Node
+from src.hydraulic_solver.nodes import Node
+from src.hydraulic_solver.systems import HydraulicSystem
 from src.hydraulic_solver.solvers import solve_steady_state_with_scipy
 ```
 
@@ -54,10 +54,13 @@ The connection package exports:
 - `create_connection(...)`: registry-based builder from string type keys.
 - `register_connection_type(...)`: extension hook for custom connection
   types.
-- `build_system_from_spec(...)`: builds a full system from a
-  JSON-friendly mapping.
-- `export_system_spec(...)`: exports a full system into a
-  JSON-friendly mapping.
+- `darcy_weisbach_head_loss(...)` and related helpers: self-contained
+  hydraulic formulas used by the pipe classes.
+
+The builder/export helpers now live in `factory.py`:
+
+- `build_system_from_spec(...)`
+- `export_system_spec(...)`
 
 All connection objects expose:
 
@@ -111,8 +114,9 @@ connection changes the sign interpretation of its local `Q`.
 
 ```python
 from src.hydraulic_solver.connections import FixedKQn_pipe
+from src.hydraulic_solver.nodes import Node
 from src.hydraulic_solver.solvers import solve_steady_state_with_scipy
-from src.hydraulic_solver.systems import HydraulicSystem, Node
+from src.hydraulic_solver.systems import HydraulicSystem
 
 system = HydraulicSystem()
 
@@ -150,12 +154,13 @@ systems.
 
 ## Workflow: Add A New Connection Model
 
-1. Put pure formulas in `src/physics/` if the law is reusable.
-2. Add the solver-facing class in `src/hydraulic_solver/connections/`.
+1. Add the hydraulic law and helper formulas in `src/hydraulic_solver/connections.py`.
+2. Add the solver-facing class in `src/hydraulic_solver/connections.py`.
 3. Implement `getFlowRate(H1, H2)` directly, or inherit from `Pipe` and
    implement `getHeadVariation(Q)`.
 4. Keep the sign convention explicit in docstrings.
-5. Export the class from `connections/__init__.py`.
+5. Export the class from `connections.py` and, if needed, from
+   `hydraulic_solver/__init__.py`.
 6. Add a focused script in `test/pipe_model_testing/` or
    `test/systems_testing/`.
 

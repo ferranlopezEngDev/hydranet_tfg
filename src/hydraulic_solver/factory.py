@@ -1,12 +1,19 @@
-"""Connection factory, registry, and spec helpers for hydraulic elements."""
+"""Factories and JSON-friendly builders for the hydraulic solver layer."""
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 
 from src.contracts import Connection
 
-from .pipes import DW_pipe, FixedKQn_pipe, KQn_pipe
-from .sampled import LinearInterpolationConnection, PolynomialRegressionConnection
+from .connections import (
+    DW_pipe,
+    FixedKQn_pipe,
+    KQn_pipe,
+    LinearInterpolationConnection,
+    PolynomialRegressionConnection,
+)
+from .nodes import Node
+from .systems import HydraulicSystem
 
 
 ConnectionFactory = Callable[..., Connection]
@@ -161,16 +168,7 @@ def register_connection_type(
     matcher: ConnectionMatcher | None = None,
     serializer: ConnectionSerializer | None = None,
 ) -> None:
-    """
-    Register one connection constructor under a stable string key.
-
-    This allows users to extend the public connection catalog without
-    editing the built-in modules. The registered constructor may be a
-    `Connection` subclass or any callable returning a `Connection`.
-
-    If `matcher` and `serializer` are also supplied, the new type becomes
-    exportable through `export_connection_spec(...)` as well.
-    """
+    """Register one connection constructor under a stable string key."""
     if not connectionType:
         raise ValueError("connectionType must be a non-empty string")
 
@@ -213,15 +211,7 @@ def create_connection(connectionType: str, /, **kwargs: object) -> Connection:
 
 
 def create_connection_from_spec(spec: Mapping[str, object]) -> Connection:
-    """
-    Build one connection from a JSON-friendly spec mapping.
-
-    Expected shape:
-        {
-            "type": "fixed_kqn_pipe",
-            "params": {"k": 10.0, "n": 2.0},
-        }
-    """
+    """Build one connection from a JSON-friendly spec mapping."""
     spec = _require_mapping(spec, "spec")
 
     connectionType = spec.get("type")
@@ -248,3 +238,107 @@ def export_connection_spec(connection: Connection) -> dict[str, object]:
         "type": connectionType,
         "params": registration.serializer(connection),
     }
+
+
+def build_node_from_spec(spec: Mapping[str, object]) -> Node:
+    """Build one `Node` from a JSON-friendly mapping."""
+    spec = _require_mapping(spec, "spec")
+
+    return Node(
+        piezometricHead=float(spec.get("piezometricHead", 0.0)),
+        elevation=float(spec.get("elevation", 0.0)),
+        externalFlow=float(spec.get("externalFlow", 0.0)),
+        isBoundary=bool(spec.get("isBoundary", False)),
+    )
+
+
+def export_node_spec(node: Node) -> dict[str, object]:
+    """Export one node into a JSON-friendly mapping."""
+    return {
+        "piezometricHead": node.getPiezometricHead(),
+        "elevation": node.getElevation(),
+        "externalFlow": node.getExternalFlow(),
+        "isBoundary": node.isBoundary(),
+    }
+
+
+def build_system_from_spec(spec: Mapping[str, object]) -> HydraulicSystem:
+    """Build one `HydraulicSystem` from a JSON-friendly spec mapping."""
+    spec = _require_mapping(spec, "spec")
+    system = HydraulicSystem()
+
+    rawNodes = spec.get("nodes", {})
+    nodeSpecs = _require_mapping(rawNodes, "spec['nodes']")
+
+    for nodeId, rawNodeSpec in nodeSpecs.items():
+        if not isinstance(nodeId, str) or not nodeId:
+            raise ValueError("Node ids in spec['nodes'] must be non-empty strings")
+
+        nodeSpec = _require_mapping(rawNodeSpec, f"spec['nodes']['{nodeId}']")
+        system.addNode(nodeId, build_node_from_spec(nodeSpec))
+
+    rawConnections = spec.get("connections", {})
+    connectionSpecs = _require_mapping(rawConnections, "spec['connections']")
+
+    for connectionId, rawConnectionSpec in connectionSpecs.items():
+        if not isinstance(connectionId, str) or not connectionId:
+            raise ValueError(
+                "Connection ids in spec['connections'] must be non-empty strings"
+            )
+
+        connectionSpec = _require_mapping(
+            rawConnectionSpec,
+            f"spec['connections']['{connectionId}']",
+        )
+        node1Id = connectionSpec.get("node1Id")
+        node2Id = connectionSpec.get("node2Id")
+
+        if not isinstance(node1Id, str) or not node1Id:
+            raise ValueError(
+                f"Connection spec '{connectionId}' must contain a non-empty string "
+                "'node1Id'"
+            )
+
+        if not isinstance(node2Id, str) or not node2Id:
+            raise ValueError(
+                f"Connection spec '{connectionId}' must contain a non-empty string "
+                "'node2Id'"
+            )
+
+        connection = create_connection_from_spec(connectionSpec)
+        system.addConnection(connectionId, connection, node1Id, node2Id)
+
+    return system
+
+
+def export_system_spec(system: HydraulicSystem) -> dict[str, object]:
+    """Export one `HydraulicSystem` into a JSON-friendly mapping."""
+    return {
+        "nodes": {
+            nodeId: export_node_spec(node)
+            for nodeId, node in system.nodes.items()
+        },
+        "connections": {
+            connectionId: {
+                **export_connection_spec(connectionEntry.connection),
+                "node1Id": connectionEntry.node1Id,
+                "node2Id": connectionEntry.node2Id,
+            }
+            for connectionId, connectionEntry in system.connections.items()
+        },
+    }
+
+
+__all__ = [
+    "list_connection_types",
+    "get_connection_constructor",
+    "get_connection_type_name",
+    "register_connection_type",
+    "create_connection",
+    "create_connection_from_spec",
+    "export_connection_spec",
+    "build_node_from_spec",
+    "export_node_spec",
+    "build_system_from_spec",
+    "export_system_spec",
+]

@@ -7,7 +7,7 @@ except ImportError:
     from _comparison_cases import format_pipe_case, get_pipe_comparison_cases
     from _plot_common import get_pyplot, linspace, relative_errors
 from src.hydraulic_solver.connections import FixedKQn_pipe, KQn_pipe
-from src.physics import fit_power_law_parameters_from_samples
+from src.hydraulic_solver.connections import fit_power_law_parameters_from_samples
 
 
 def main() -> None:

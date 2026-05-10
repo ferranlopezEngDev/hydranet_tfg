@@ -4,17 +4,7 @@ from math import isfinite
 
 
 class Node:
-    """
-    Concrete H-based node storing state and boundary semantics.
-
-    `piezometricHead` has two roles depending on `isBoundary`:
-
-    - boundary node: fixed prescribed head used directly by the residual;
-    - unknown node: current/initial head guess that solvers may update.
-
-    Keeping both cases in one class makes it cheap to switch a node from
-    known head to unknown head, or back, without rebuilding the network.
-    """
+    """Concrete H-based node storing state and boundary semantics."""
 
     __slots__ = (
         "_externalFlow",
@@ -77,12 +67,7 @@ class Node:
         externalFlow: float | None = None,
         isBoundary: bool | None = None,
     ) -> None:
-        """
-        Update one or more node parameters in-place.
-
-        Omitted arguments keep their current values, which is convenient
-        when switching scenarios without rebuilding the network.
-        """
+        """Update one or more node parameters in-place."""
         if piezometricHead is not None:
             self.setPiezometricHead(piezometricHead)
 
@@ -108,3 +93,6 @@ class Node:
             raise ValueError(f"{name} must be a finite number")
 
         return numericValue
+
+
+__all__ = ["Node"]

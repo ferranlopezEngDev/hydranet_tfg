@@ -18,20 +18,21 @@ additional lightweight regression layer for the most important flows.
 
 ### Changing Physics Formulas
 
-1. Update or add the pure function in `src/physics/`.
+1. Update or add the hydraulic helper in `src/hydraulic_solver/connections.py`.
 2. Add a plot in `pipe_model_testing/`.
 3. Check sign behavior around `Q = 0`.
 4. Compare against a reference model when possible.
 
 ### Changing Connection Classes
 
-1. Update code in `src/hydraulic_solver/connections/`.
+1. Update code in `src/hydraulic_solver/connections.py`.
 2. Run relevant pipe-model plots.
 3. Add a system example if the change affects assembled behavior.
 
 ### Changing System Or Solver Logic
 
-1. Update `src/hydraulic_solver/systems/` or `solvers/`.
+1. Update `src/hydraulic_solver/nodes.py`, `systems.py`, `factory.py`,
+   or `solvers/`.
 2. Run both current system examples.
 3. Add a new focused example if the topology or residual behavior is
    new.

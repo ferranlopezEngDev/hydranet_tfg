@@ -6,11 +6,10 @@ formulation used in the TFG.
 The codebase now covers the full first path from hydraulic formulas to
 assembled steady-state solves:
 
-1. pure formulas in `src/physics/`;
-2. solver-facing nodes and connections in `src/hydraulic_solver/`;
-3. canonical network assembly in `HydraulicSystem`;
-4. SciPy steady-state solution of unknown node heads;
-5. executable validation scripts in `test/`.
+1. self-contained hydraulic formulas and connection models in `src/hydraulic_solver/`;
+2. canonical network assembly in `HydraulicSystem`;
+3. SciPy steady-state solution of unknown node heads;
+4. executable validation scripts in `test/`.
 
 ## Sign Convention
 
@@ -28,17 +27,16 @@ For nodes:
 - The nodal residual is
   `externalFlow + sum(connection flows leaving node)`.
 
-This convention ties together `src/physics`,
-`src/hydraulic_solver/connections`, `src/hydraulic_solver/systems`, and
+This convention ties together `src/hydraulic_solver/connections.py`,
+`src/hydraulic_solver/nodes.py`, `src/hydraulic_solver/systems.py`, and
 the examples in `test/`.
 
 ## Repository Map
 
 - `src/`: Python implementation.
-- `src/physics/`: pure hydraulic formulas.
 - `src/contracts/`: shared abstract contracts.
-- `src/hydraulic_solver/`: nodes, connections, systems, and solver
-  orchestration.
+- `src/hydraulic_solver/`: self-contained hydraulic formulas, nodes,
+  systems, factories, and solver orchestration.
 - `test/pipe_model_testing/`: plots for elemental pipe behavior.
 - `test/systems_testing/`: assembled-network examples and SciPy checks.
 - `teoria/`: theoretical references and TFG material.
@@ -63,18 +61,18 @@ the examples in `test/`.
 ### Add Or Change A Physical Law
 
 1. Start from `teoria/`.
-2. Implement the pure function in `src/physics/`.
+2. Implement the hydraulic helper in `src/hydraulic_solver/connections.py`.
 3. Validate units, signs, and parameter ranges.
-4. Export the function from `src/physics/__init__.py`.
+4. Export it from `src/hydraulic_solver/connections.py` if it is public.
 5. Add or update a script in `test/pipe_model_testing/`.
 
 ### Wrap A Law As A Connection
 
-1. Add the class in `src/hydraulic_solver/connections/`.
+1. Add the class in `src/hydraulic_solver/connections.py`.
 2. Implement `getFlowRate(H1, H2)` directly, or inherit from `Pipe` and
    implement `getHeadVariation(Q)`.
 3. Keep endpoint sign convention explicit.
-4. Export the class from `connections/__init__.py`.
+4. Export the class from `src/hydraulic_solver/connections.py`.
 5. Validate direct and inverse behavior.
 
 ### Build And Solve A Network
@@ -125,14 +123,9 @@ Compile-check the code:
 ## Documentation Map
 
 - [src/README.md](src/README.md): implementation package map.
-- [src/physics/README.md](src/physics/README.md): pure formulas.
 - [src/contracts/README.md](src/contracts/README.md): shared contracts.
 - [src/hydraulic_solver/README.md](src/hydraulic_solver/README.md):
   solver-facing architecture.
-- [src/hydraulic_solver/connections/README.md](src/hydraulic_solver/connections/README.md):
-  connection classes and pipe workflows.
-- [src/hydraulic_solver/systems/README.md](src/hydraulic_solver/systems/README.md):
-  node API, network container API, and residual flow.
 - [src/hydraulic_solver/solvers/README.md](src/hydraulic_solver/solvers/README.md):
   SciPy solver workflow.
 - [test/README.md](test/README.md): validation scripts.

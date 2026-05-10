@@ -33,11 +33,12 @@ Meaning:
 
 ## Workflow: Add A New Connection Implementation
 
-1. Create the implementation in `src/hydraulic_solver/connections/`.
+1. Create the implementation in `src/hydraulic_solver/connections.py`.
 2. Inherit from `Connection` or from a class that already inherits it.
 3. Implement `getFlowRate(H1, H2)`.
 4. Keep endpoint sign convention explicit.
-5. Export the implementation from `connections/__init__.py`.
+5. Export the implementation from `connections.py` and, if useful,
+   from `src/hydraulic_solver/__init__.py`.
 
 ## Workflow: Add A New Contract
 

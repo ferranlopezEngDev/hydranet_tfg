@@ -8,8 +8,8 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.contracts import Connection
-from src.hydraulic_solver.connections import (
-    FixedKQn_pipe,
+from src.hydraulic_solver.connections import FixedKQn_pipe
+from src.hydraulic_solver.factory import (
     create_connection,
     create_connection_from_spec,
     export_connection_spec,

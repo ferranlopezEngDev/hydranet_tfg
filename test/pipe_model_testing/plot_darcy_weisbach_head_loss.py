@@ -6,7 +6,7 @@ try:
 except ImportError:
     from _plot_common import get_pyplot, linspace
     from _water_properties import WATER_KINEMATIC_VISCOSITY, format_water_properties
-from src.physics import (
+from src.hydraulic_solver.connections import (
     darcy_weisbach_head_loss,
 )
 

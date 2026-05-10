@@ -39,7 +39,7 @@ Behavior:
 
 These functions are reference or teaching implementations. Production
 pipe inversion currently uses SciPy inside
-`src/hydraulic_solver/connections/pipes.py`.
+`src/hydraulic_solver/connections.py`.
 
 ### `bisection(...)`
 
@@ -94,7 +94,7 @@ Use when:
 
 1. Put a helper here only if it is useful across modules and not tied to
    one constitutive law.
-2. Prefer `src/physics/` for hydraulic formulas.
-3. Prefer `src/hydraulic_solver/` for solver behavior.
-4. Keep implementations small and easy to compare against library
+2. Prefer `src/hydraulic_solver/` for hydraulic formulas and solver
+   behavior tightly tied to the hydraulic layer.
+3. Keep implementations small and easy to compare against library
    equivalents.

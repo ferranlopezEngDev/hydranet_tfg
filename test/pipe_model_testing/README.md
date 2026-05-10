@@ -120,8 +120,8 @@ one fixed power law.
 
 ## Workflow: Validate A New Pipe Model
 
-1. Add or reuse the pure formula in `src/physics/`.
-2. Add the connection class in `src/hydraulic_solver/connections/`.
+1. Add or reuse the hydraulic helper in `src/hydraulic_solver/connections.py`.
+2. Add the connection class in `src/hydraulic_solver/connections.py`.
 3. Plot the direct law `h(Q)` if the model exposes one.
 4. Plot the inverse law `Q(H1, H2)` if the model is used by systems.
 5. Compare against an existing reference model when possible.

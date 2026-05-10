@@ -1,9 +1,64 @@
-"""Solver-facing packages for the hydraulic network formulation."""
+"""Solver-facing hydraulic model exports."""
 
-from .systems import ConnectionEntry, HydraulicSystem, Node
+from .connections import (
+    DW_pipe,
+    FixedKQn_pipe,
+    KQn_pipe,
+    LinearInterpolationConnection,
+    Pipe,
+    PolynomialRegressionConnection,
+    darcy_weisbach_friction_factor,
+    darcy_weisbach_head_loss,
+    fit_power_law_parameters_from_samples,
+    laminar_power_law_parameters,
+    local_power_law_head_loss_from_darcy,
+    local_power_law_parameters_from_darcy,
+    power_law_flow_rate,
+    power_law_head_loss,
+)
+from .factory import (
+    build_node_from_spec,
+    build_system_from_spec,
+    create_connection,
+    create_connection_from_spec,
+    export_connection_spec,
+    export_node_spec,
+    export_system_spec,
+    get_connection_constructor,
+    get_connection_type_name,
+    list_connection_types,
+    register_connection_type,
+)
+from .nodes import Node
+from .systems import ConnectionEntry, HydraulicSystem
 
 __all__ = [
+    "Pipe",
+    "DW_pipe",
+    "KQn_pipe",
+    "FixedKQn_pipe",
+    "LinearInterpolationConnection",
+    "PolynomialRegressionConnection",
+    "darcy_weisbach_friction_factor",
+    "darcy_weisbach_head_loss",
+    "power_law_head_loss",
+    "power_law_flow_rate",
+    "laminar_power_law_parameters",
+    "local_power_law_parameters_from_darcy",
+    "local_power_law_head_loss_from_darcy",
+    "fit_power_law_parameters_from_samples",
+    "list_connection_types",
+    "get_connection_constructor",
+    "get_connection_type_name",
+    "register_connection_type",
+    "create_connection",
+    "create_connection_from_spec",
+    "export_connection_spec",
     "Node",
-    "HydraulicSystem",
     "ConnectionEntry",
+    "HydraulicSystem",
+    "build_node_from_spec",
+    "export_node_spec",
+    "build_system_from_spec",
+    "export_system_spec",
 ]

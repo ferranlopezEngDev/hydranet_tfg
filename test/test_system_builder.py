@@ -8,12 +8,12 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.hydraulic_solver.connections import FixedKQn_pipe
-from src.hydraulic_solver.systems import (
-    HydraulicSystem,
-    Node,
+from src.hydraulic_solver.factory import (
     build_system_from_spec,
     export_system_spec,
 )
+from src.hydraulic_solver.nodes import Node
+from src.hydraulic_solver.systems import HydraulicSystem
 
 
 class SystemBuilderTests(unittest.TestCase):

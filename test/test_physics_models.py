@@ -7,7 +7,7 @@ import unittest
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.physics import (
+from src.hydraulic_solver.connections import (
     darcy_weisbach_head_loss,
     laminar_power_law_parameters,
     local_power_law_parameters_from_darcy,

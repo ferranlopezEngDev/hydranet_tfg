@@ -7,8 +7,9 @@ if __package__ in (None, ""):
     sys.path.append(str(Path(__file__).resolve().parents[2]))
 
 from src.hydraulic_solver.connections import FixedKQn_pipe
+from src.hydraulic_solver.nodes import Node
 from src.hydraulic_solver.solvers import solve_steady_state_with_scipy
-from src.hydraulic_solver.systems import HydraulicSystem, Node
+from src.hydraulic_solver.systems import HydraulicSystem
 
 
 SOURCE_HEAD: float = 100.0

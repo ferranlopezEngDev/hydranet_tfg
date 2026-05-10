@@ -7,7 +7,7 @@ import unittest
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src.hydraulic_solver.systems import Node
+from src.hydraulic_solver.nodes import Node
 
 
 class NodeApiTests(unittest.TestCase):
