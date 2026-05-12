@@ -1,7 +1,10 @@
 """Factories and JSON-friendly builders for the hydraulic solver layer."""
 
+import json
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from os import PathLike
+from pathlib import Path
 
 from .connections import (
     DW_pipe,
@@ -17,6 +20,7 @@ from .systems import Connection, HydraulicSystem
 ConnectionFactory = Callable[..., Connection]
 ConnectionSerializer = Callable[[Connection], dict[str, object]]
 ConnectionMatcher = Callable[[Connection], bool]
+SystemFilePath = str | PathLike[str]
 
 
 @dataclass(frozen=True)
@@ -327,6 +331,33 @@ def export_system_spec(system: HydraulicSystem) -> dict[str, object]:
     }
 
 
+def load_system_from_json(path: SystemFilePath) -> HydraulicSystem:
+    """Load one `HydraulicSystem` from a JSON file."""
+    systemPath = Path(path)
+
+    with systemPath.open("r", encoding="utf-8") as handle:
+        spec = json.load(handle)
+
+    return build_system_from_spec(
+        _require_mapping(spec, f"JSON document '{systemPath}'"),
+    )
+
+
+def save_system_to_json(
+    system: HydraulicSystem,
+    path: SystemFilePath,
+    *,
+    indent: int = 2,
+) -> None:
+    """Save one `HydraulicSystem` to a JSON file via the canonical spec."""
+    systemPath = Path(path)
+    spec = export_system_spec(system)
+
+    with systemPath.open("w", encoding="utf-8") as handle:
+        json.dump(spec, handle, indent=indent)
+        handle.write("\n")
+
+
 __all__ = [
     "list_connection_types",
     "get_connection_constructor",
@@ -339,4 +370,6 @@ __all__ = [
     "export_node_spec",
     "build_system_from_spec",
     "export_system_spec",
+    "load_system_from_json",
+    "save_system_to_json",
 ]

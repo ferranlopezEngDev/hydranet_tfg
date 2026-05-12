@@ -1,0 +1,60 @@
+{
+  "nodes": {
+    "1": {
+      "piezometricHead": 100.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "2": {
+      "piezometricHead": 85.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "3": {
+      "piezometricHead": 60.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "4": {
+      "piezometricHead": 80.0,
+      "elevation": 0.0,
+      "externalFlow": 0.06,
+      "isBoundary": false
+    }
+  },
+  "connections": {
+    "pipe_4_to_1": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 1469.0,
+        "n": 1.974,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "4",
+      "node2Id": "1"
+    },
+    "pipe_4_to_2": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 2432.0,
+        "n": 1.927,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "4",
+      "node2Id": "2"
+    },
+    "pipe_4_to_3": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 5646.0,
+        "n": 1.971,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "4",
+      "node2Id": "3"
+    }
+  }
+}

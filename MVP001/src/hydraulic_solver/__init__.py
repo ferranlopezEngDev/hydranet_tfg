@@ -26,8 +26,10 @@ from .factory import (
     export_system_spec,
     get_connection_constructor,
     get_connection_type_name,
+    load_system_from_json,
     list_connection_types,
     register_connection_type,
+    save_system_to_json,
 )
 from .nodes import Node
 from .systems import Connection, ConnectionEntry, HydraulicSystem
@@ -62,4 +64,6 @@ __all__ = [
     "export_node_spec",
     "build_system_from_spec",
     "export_system_spec",
+    "load_system_from_json",
+    "save_system_to_json",
 ]

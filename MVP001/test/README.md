@@ -7,6 +7,8 @@ The project does not use `pytest` yet, but it now has a small automated
 `unittest` suite alongside the executable scripts. In practice, `test/`
 still behaves like an executable engineering notebook, with an
 additional lightweight regression layer for the most important flows.
+That regression layer now also covers the application interactors and
+the first CLI menu.
 
 ## Folders
 
@@ -37,14 +39,22 @@ additional lightweight regression layer for the most important flows.
 3. Add a new focused example if the topology or residual behavior is
    new.
 
+### Changing Application Or CLI Flows
+
+1. Update `src/application/` or `src/app_cli.py`.
+2. Keep domain orchestration in interactors rather than in the CLI.
+3. Add or update focused `unittest` coverage for the use case or
+   command flow.
+
 ## Commands
 
 ```bash
-./.venv/bin/python -m unittest discover -s test -p 'test_*.py'
-./.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
-./.venv/bin/python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
-./.venv/bin/python -m test.systems_testing.solve_parallel_pipes
-./.venv/bin/python -m test.systems_testing.solve_three_reservoirs
+../.venv/bin/python -m unittest discover -s test -p 'test_*.py'
+../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
+../.venv/bin/python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
+../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
+../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
+../.venv/bin/python -m src.app_cli -h
 ```
 
 ## Style For New Scripts

@@ -62,6 +62,8 @@ The builder/export helpers now live in `factory.py`:
 
 - `build_system_from_spec(...)`
 - `export_system_spec(...)`
+- `load_system_from_json(...)`
+- `save_system_to_json(...)`
 
 All connection objects expose:
 

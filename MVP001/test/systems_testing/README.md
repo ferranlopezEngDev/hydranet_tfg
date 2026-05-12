@@ -7,16 +7,16 @@ topology validation, residual construction, and the SciPy solve bridge.
 Run scripts as modules from the repository root:
 
 ```bash
-./.venv/bin/python -m unittest test.test_system_examples
-./.venv/bin/python -m test.systems_testing.solve_parallel_pipes
-./.venv/bin/python -m test.systems_testing.solve_three_reservoirs
+../.venv/bin/python -m unittest test.test_system_examples
+../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
+../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
 ```
 
 They can also be run directly:
 
 ```bash
-./.venv/bin/python test/systems_testing/solve_parallel_pipes.py
-./.venv/bin/python test/systems_testing/solve_three_reservoirs.py
+../.venv/bin/python test/systems_testing/solve_parallel_pipes.py
+../.venv/bin/python test/systems_testing/solve_three_reservoirs.py
 ```
 
 ## Dependency Direction

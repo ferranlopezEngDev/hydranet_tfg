@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 
 if __package__ in (None, ""):
@@ -11,6 +12,8 @@ from src.hydraulic_solver.connections import FixedKQn_pipe
 from src.hydraulic_solver.factory import (
     build_system_from_spec,
     export_system_spec,
+    load_system_from_json,
+    save_system_to_json,
 )
 from src.hydraulic_solver.nodes import Node
 from src.hydraulic_solver.systems import HydraulicSystem
@@ -84,6 +87,38 @@ class SystemBuilderTests(unittest.TestCase):
             rebuiltSystem.getConnectionEntry("pipe_1").connection,
             FixedKQn_pipe,
         )
+
+    def test_system_can_round_trip_through_json_file(self) -> None:
+        system = HydraulicSystem()
+        system.addNode("source", Node(piezometricHead=100.0, isBoundary=True))
+        system.addNode(
+            "demand",
+            Node(piezometricHead=95.0, externalFlow=0.12, isBoundary=False),
+        )
+        system.addConnection(
+            "pipe_1",
+            FixedKQn_pipe(k=1469.0, n=1.974),
+            "source",
+            "demand",
+        )
+
+        with tempfile.TemporaryDirectory() as temporaryDirectory:
+            jsonPath = Path(temporaryDirectory) / "network.json"
+
+            save_system_to_json(system, jsonPath)
+            rebuiltSystem = load_system_from_json(jsonPath)
+
+            self.assertTrue(jsonPath.is_file())
+            self.assertEqual(rebuiltSystem.getBoundaryNodeIds(), ("source",))
+            self.assertEqual(rebuiltSystem.getUnknownHeadNodeIds(), ("demand",))
+            self.assertAlmostEqual(
+                rebuiltSystem.getNode("demand").getExternalFlow(),
+                0.12,
+            )
+            self.assertIsInstance(
+                rebuiltSystem.getConnectionEntry("pipe_1").connection,
+                FixedKQn_pipe,
+            )
 
 
 if __name__ == "__main__":
