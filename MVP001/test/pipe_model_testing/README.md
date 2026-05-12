@@ -10,11 +10,11 @@ pipe laws visible before those laws are used inside assembled systems.
 Run them as modules from the repository root:
 
 ```bash
-../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_friction_factor
-../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
-../.venv/bin/python -m test.pipe_model_testing.plot_dw_pipe_flow_rate_vs_head_difference
-../.venv/bin/python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
-../.venv/bin/python -m test.pipe_model_testing.plot_kqn_vs_fixed_kqn_regression
+python -m test.pipe_model_testing.plot_darcy_weisbach_friction_factor
+python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
+python -m test.pipe_model_testing.plot_dw_pipe_flow_rate_vs_head_difference
+python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
+python -m test.pipe_model_testing.plot_kqn_vs_fixed_kqn_regression
 ```
 
 ## Helper Modules

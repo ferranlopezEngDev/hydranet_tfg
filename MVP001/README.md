@@ -51,7 +51,6 @@ the examples in `test/`.
 - `test/pipe_model_testing/`: plots for elemental pipe behavior.
 - `test/systems_testing/`: assembled-network examples and SciPy checks.
 - `teoria/`: theoretical references and TFG material.
-- `.venv/`: local virtual environment used by current workflows.
 
 ## Current Capabilities
 
@@ -130,19 +129,19 @@ the examples in `test/`.
 Run pipe-model checks:
 
 ```bash
-../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_friction_factor
-../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
-../.venv/bin/python -m test.pipe_model_testing.plot_dw_pipe_flow_rate_vs_head_difference
-../.venv/bin/python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
-../.venv/bin/python -m test.pipe_model_testing.plot_kqn_vs_fixed_kqn_regression
+python -m test.pipe_model_testing.plot_darcy_weisbach_friction_factor
+python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
+python -m test.pipe_model_testing.plot_dw_pipe_flow_rate_vs_head_difference
+python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
+python -m test.pipe_model_testing.plot_kqn_vs_fixed_kqn_regression
 ```
 
 Run assembled-system examples:
 
 ```bash
-../.venv/bin/python -m unittest discover -s test -p 'test_*.py'
-../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
-../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
+python -m unittest discover -s test -p 'test_*.py'
+python -m test.systems_testing.solve_parallel_pipes
+python -m test.systems_testing.solve_three_reservoirs
 ```
 
 Save and reload a network from Python:
@@ -158,9 +157,9 @@ Run the CLI:
 
 ```bash
 bash install.sh
-../.venv/bin/python src/app_cli.py
-../.venv/bin/python -m src.app_cli menu
-../.venv/bin/python -m src.app_cli -h
+python src/app_cli.py
+python -m src.app_cli menu
+python -m src.app_cli -h
 ```
 
 Windows setup is also prepared through `install_windows.ps1` and
@@ -184,7 +183,7 @@ Sample CLI network cases live in `networks/cli_cases/`. They cover:
 Compile-check the code:
 
 ```bash
-../.venv/bin/python -m compileall src test
+python -m compileall src test
 ```
 
 ## Documentation Map

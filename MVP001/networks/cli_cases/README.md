@@ -23,7 +23,7 @@ The public CLI surface of the MVP is menu-driven.
 
 ```bash
 cd MVP001
-../.venv/bin/python src/app_cli.py
+python src/app_cli.py
 ```
 
 2. Use option `1` to open one case file, for example:

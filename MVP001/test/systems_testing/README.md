@@ -7,20 +7,20 @@ topology validation, residual construction, and the SciPy solve bridge.
 Run scripts as modules from the repository root:
 
 ```bash
-../.venv/bin/python -m unittest test.test_system_examples
-../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
-../.venv/bin/python -m test.systems_testing.solve_single_dw_pipe
-../.venv/bin/python -m test.systems_testing.solve_single_kqn_pipe
-../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
+python -m unittest test.test_system_examples
+python -m test.systems_testing.solve_parallel_pipes
+python -m test.systems_testing.solve_single_dw_pipe
+python -m test.systems_testing.solve_single_kqn_pipe
+python -m test.systems_testing.solve_three_reservoirs
 ```
 
 They can also be run directly:
 
 ```bash
-../.venv/bin/python test/systems_testing/solve_parallel_pipes.py
-../.venv/bin/python test/systems_testing/solve_single_dw_pipe.py
-../.venv/bin/python test/systems_testing/solve_single_kqn_pipe.py
-../.venv/bin/python test/systems_testing/solve_three_reservoirs.py
+python test/systems_testing/solve_parallel_pipes.py
+python test/systems_testing/solve_single_dw_pipe.py
+python test/systems_testing/solve_single_kqn_pipe.py
+python test/systems_testing/solve_three_reservoirs.py
 ```
 
 ## Dependency Direction

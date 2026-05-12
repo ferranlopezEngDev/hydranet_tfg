@@ -17,6 +17,6 @@ rewriting the previous milestone in place.
 
 ```bash
 cd MVP001
-../.venv/bin/python src/app_cli.py
-../.venv/bin/python -m unittest discover -s test -p 'test_*.py'
+python src/app_cli.py
+python -m unittest discover -s test -p 'test_*.py'
 ```

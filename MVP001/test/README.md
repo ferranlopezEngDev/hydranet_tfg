@@ -49,14 +49,14 @@ the first CLI menu.
 ## Commands
 
 ```bash
-../.venv/bin/python -m unittest discover -s test -p 'test_*.py'
-../.venv/bin/python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
-../.venv/bin/python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
-../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
-../.venv/bin/python -m test.systems_testing.solve_single_dw_pipe
-../.venv/bin/python -m test.systems_testing.solve_single_kqn_pipe
-../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
-../.venv/bin/python -m src.app_cli -h
+python -m unittest discover -s test -p 'test_*.py'
+python -m test.pipe_model_testing.plot_darcy_weisbach_head_loss
+python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
+python -m test.systems_testing.solve_parallel_pipes
+python -m test.systems_testing.solve_single_dw_pipe
+python -m test.systems_testing.solve_single_kqn_pipe
+python -m test.systems_testing.solve_three_reservoirs
+python -m src.app_cli -h
 ```
 
 ## Style For New Scripts
