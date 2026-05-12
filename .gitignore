@@ -131,5 +131,9 @@ coverage/
 *.avi
 *.mov
 
-# Generated stress test data
-MVP002/networks/stress_cases/
+# Generated stress test data - ignore all files in stress_cases
+# These are dynamically generated and can exceed GitHub's 100MB file limit
+MVP002/networks/stress_cases/*.json
+MVP002/networks/stress_cases/*_nodes_*.json
+MVP002/networks/stress_cases/*_connections_*.json
+MVP002/networks/stress_cases/solver_stress_*.json
