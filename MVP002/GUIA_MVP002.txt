@@ -1,0 +1,100 @@
+MVP002 - GUIA DE ARRANQUE
+=========================
+
+1. QUE ES ESTE MVP
+------------------
+MVP002 es la evolucion de MVP001 hacia una aplicacion de escritorio con
+`tkinter`.
+
+Se mantiene el nucleo hidraulico y la capa `application`, pero la
+entrada publica deja de ser la CLI y pasa a ser una GUI de ventana
+unica.
+
+
+2. QUE INCLUYE EL PACK
+----------------------
+El pack `MVP002` ya se puede compartir como carpeta autocontenida con:
+
+- instaladores para Linux / macOS y Windows,
+- lanzadores para abrir la GUI sobre la `.venv`,
+- dependencias fijadas en `requirements.txt`,
+- JSON de ejemplo y de estres,
+- tests,
+- y documentacion de uso e instalacion.
+
+
+3. CAPAS IMPORTANTES
+--------------------
+3.1. `src/hydraulic_solver/`
+Mantiene formulas, conexiones, sistemas y adaptadores de solver.
+
+3.2. `src/application/`
+Mantiene los casos de uso reutilizables para editar, validar, resolver
+y exportar resultados.
+
+3.3. `src/plotting/`
+Construye figuras de Matplotlib y su integracion en Tk.
+
+3.4. `src/gui/`
+Mantiene ventanas, paneles, tooltips, dialogs y estado de sesion.
+
+
+4. PUNTO DE ENTRADA
+-------------------
+Recomendado tras instalar:
+
+   bash run.sh
+
+o en Windows:
+
+   run_windows.cmd
+
+Tambien puede lanzarse directamente con:
+
+   python src/main.py
+
+o:
+
+   python src/gui_app.py
+
+
+5. ALCANCE ACTUAL
+-----------------
+La ventana principal ya esta dividida en tres modos:
+
+- `Editor de redes`
+- `Simulaciones`
+- `Visualizador`
+
+`Visualizador` se divide a su vez en:
+
+- `Resultados`
+- `Modelos`
+
+Ademas:
+- el solver publico expuesto es `root`,
+- existe configuracion de metodo, tolerancia y opciones JSON,
+- los plots de modelos tienen toolbar interactiva,
+- y la app puede hacer `current_state_evaluation` para inspeccionar
+  caudales aunque no haya solve estricto posible.
+
+
+6. ARCHIVOS CLAVE PARA ENTREGA
+------------------------------
+- `install.sh`
+- `install_windows.cmd`
+- `install_windows.ps1`
+- `run.sh`
+- `run_windows.cmd`
+- `requirements.txt`
+- `INSTALL.txt`
+- `README.md`
+
+
+7. SIGUIENTES PASOS NATURALES
+-----------------------------
+- mejorar el editor con canvas topologico,
+- ampliar formularios especificos por tipo de conexion,
+- enriquecer metricas y comparativas de solver,
+- hacer mas rico el visualizador de resultados,
+- y optimizar la app para redes mucho mas grandes.

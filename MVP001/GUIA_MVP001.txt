@@ -279,6 +279,11 @@ El menu recuerda la red actual abierta, de modo que no hace falta
 reescribir la ruta en cada paso si se quiere seguir trabajando sobre el
 mismo archivo.
 
+Ademas, cuando la CLI pide una ruta, se puede escribir:
+
+- una ruta manual;
+- o `b` para abrir un navegador simple por carpetas y archivos JSON.
+
 
 9. QUE INFORMACION PUEDE VER UN USUARIO
 ---------------------------------------
@@ -405,7 +410,7 @@ Ejemplo conceptual:
 
 12. CASOS DE RED INCLUIDOS EN EL MVP
 ------------------------------------
-Se incluyen cinco redes listas para probar la CLI.
+Se incluyen nueve redes listas para probar la CLI.
 
 12.1. 01_single_pipe_valid.json
 --------------------------------
@@ -455,6 +460,44 @@ Sirve para:
 
 - comprobar que la validacion falla cuando no hay condicion de
   contorno suficiente.
+
+12.6. 06_single_dw_pipe_valid.json
+----------------------------------
+Caso minimo valido con una tuberia `dw_pipe`.
+
+Sirve para:
+
+- probar el modelo Darcy-Weisbach directamente dentro de una red;
+- comprobar que la CLI no depende solo de `fixed_kqn_pipe`.
+
+12.7. 07_single_kqn_pipe_valid.json
+-----------------------------------
+Caso minimo valido con una tuberia `kqn_pipe`.
+
+Sirve para:
+
+- probar el modelo local `K(Q), n(Q)` derivado de Darcy;
+- comparar su comportamiento con el caso `dw_pipe`.
+
+12.8. 08_single_linear_interpolation_valid.json
+-----------------------------------------------
+Caso minimo valido con una conexion `linear_interpolation`.
+
+Sirve para:
+
+- probar una conexion tabulada simple;
+- comprobar que la red tambien funciona con modelos no basados en
+  tuberia fisica cerrada.
+
+12.9. 09_single_polynomial_regression_valid.json
+------------------------------------------------
+Caso minimo valido con una conexion `polynomial_regression`.
+
+Sirve para:
+
+- probar un modelo ajustado por regresion;
+- verificar que la CLI puede cargar y resolver conexiones basadas en
+  muestras.
 
 
 13. FLUJOS DE PRUEBA RECOMENDADOS
@@ -621,7 +664,7 @@ El camino mas util es:
 1. instalar,
 2. ejecutar tests,
 3. abrir la CLI,
-4. cargar uno de los cinco casos,
+4. cargar uno de los casos de ejemplo,
 5. validar,
 6. resolver un caso valido,
 7. y solo despues probar la edicion manual.

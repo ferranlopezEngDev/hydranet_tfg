@@ -14,6 +14,14 @@ These network files are ready-made scenarios for exercising the CLI.
   node.
 - `05_missing_boundary_invalid.json`: connected network with no
   boundary node.
+- `06_single_dw_pipe_valid.json`: minimal valid case using `dw_pipe`.
+- `07_single_kqn_pipe_valid.json`: minimal valid case using `kqn_pipe`.
+- `08_single_linear_interpolation_valid.json`: minimal valid case using
+  `linear_interpolation`.
+- `09_single_polynomial_regression_valid.json`: minimal valid case
+  using `polynomial_regression`.
+- `10_single_factor_polynomial_valid.json`: minimal valid case using
+  `factor_polynomial`.
 
 ## Suggested MVP Flow
 

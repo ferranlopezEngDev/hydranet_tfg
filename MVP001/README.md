@@ -169,7 +169,8 @@ interactive numbered menu. For this MVP, the public CLI surface is
 intentionally limited to that menu flow. The menu keeps track of the
 currently opened network path so you can import/open one file and keep
 working on it across numbered actions without composing long chained
-commands.
+commands. In path prompts, type `b` to open the folder and JSON-file
+browser.
 
 Sample CLI network cases live in `networks/cli_cases/`. They cover:
 
@@ -178,6 +179,9 @@ Sample CLI network cases live in `networks/cli_cases/`. They cover:
 - a valid three-reservoir network;
 - an invalid network with an isolated node;
 - an invalid network with no boundary condition.
+- single-pipe examples for `dw_pipe`, `kqn_pipe`,
+  `linear_interpolation`, `polynomial_regression`, and
+  `factor_polynomial`.
 
 Compile-check the code:
 

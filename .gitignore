@@ -130,3 +130,6 @@ coverage/
 *.mp4
 *.avi
 *.mov
+
+# Generated stress test data
+MVP002/networks/stress_cases/

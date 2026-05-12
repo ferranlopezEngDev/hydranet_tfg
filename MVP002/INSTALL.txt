@@ -1,0 +1,135 @@
+MVP002 - INSTALACION Y PUESTA EN MARCHA
+=======================================
+
+Este archivo esta pensado para compartir la carpeta `MVP002` como un
+pack completo y autocontenido del MVP de GUI.
+
+REQUISITOS PREVIOS
+------------------
+- Python 3.11 o superior.
+- Acceso a Internet para instalar dependencias desde `requirements.txt`.
+- Soporte `tkinter`.
+
+Notas por plataforma:
+- Windows: usa preferiblemente Python oficial de python.org con el
+  launcher `py`.
+- Linux: `tkinter` puede requerir un paquete del sistema.
+  Ejemplo Debian/Ubuntu:
+
+     sudo apt install python3-tk
+
+
+INSTALACION RAPIDA EN LINUX / MACOS
+-----------------------------------
+1. Entrar en la carpeta `MVP002`.
+2. Ejecutar:
+
+   bash install.sh
+
+3. Lanzar la GUI:
+
+   bash run.sh
+
+Tambien se puede activar el entorno manualmente:
+
+   source .venv/bin/activate
+   python src/main.py
+
+
+INSTALACION RAPIDA EN WINDOWS
+-----------------------------
+1. Abrir PowerShell o `cmd` dentro de la carpeta `MVP002`.
+2. Ejecutar:
+
+   install_windows.cmd
+
+3. Lanzar la GUI:
+
+   run_windows.cmd
+
+Si PowerShell bloquea la ejecucion directa, usa el `.cmd`, que ya llama
+al script con `ExecutionPolicy Bypass`.
+
+
+INSTALACION MANUAL
+------------------
+1. Entrar en `MVP002`.
+2. Crear entorno:
+
+   Linux / macOS:
+     python3 -m venv .venv
+
+   Windows:
+     py -3 -m venv .venv
+
+3. Activar el entorno:
+
+   Linux / macOS:
+     source .venv/bin/activate
+
+   Windows PowerShell:
+     .venv\Scripts\Activate.ps1
+
+4. Instalar dependencias:
+
+   python -m pip install --upgrade pip setuptools wheel
+   python -m pip install -r requirements.txt
+
+5. Lanzar la GUI:
+
+   python src/main.py
+
+
+COMPROBACION OPCIONAL COMPLETA
+------------------------------
+Los instaladores admiten una verificacion mas completa:
+
+- Linux / macOS:
+
+     RUN_CHECKS=1 bash install.sh
+
+- Windows:
+
+     install_windows.cmd -RunChecks
+
+Eso ejecuta:
+- import smoke de `numpy`, `scipy`, `matplotlib` y `tkinter`,
+- `pip check`,
+- `compileall`,
+- y la suite de tests.
+
+
+COMPROBACION MANUAL
+-------------------
+1. Ejecutar tests:
+
+   python -m unittest discover -s test -p test_*.py
+
+2. Comprobar compilacion:
+
+   python -m compileall src test
+
+3. Lanzar la app:
+
+   python src/main.py
+
+
+ARCHIVOS IMPORTANTES DEL PACK
+-----------------------------
+- `install.sh`: instalador para Linux / macOS.
+- `install_windows.cmd`: wrapper sencillo para Windows.
+- `install_windows.ps1`: instalador detallado para Windows.
+- `run.sh`: lanzador de la GUI sobre la `.venv`.
+- `run_windows.cmd`: lanzador de la GUI para Windows.
+- `requirements.txt`: dependencias Python fijadas.
+- `README.md`: resumen del MVP.
+- `GUIA_MVP002.txt`: contexto funcional y de arquitectura.
+
+
+NOTAS
+-----
+- `tkinter` pertenece a la libreria estandar de Python, pero en Linux a
+  veces hay que instalarlo aparte.
+- El pack incluye tests, casos JSON normales y casos de estres.
+- El entry point publico de `MVP002` es la GUI; la antigua CLI publica
+  de `MVP001` ya no forma parte de este entregable.

@@ -2,6 +2,7 @@
 
 from contextlib import redirect_stderr, redirect_stdout
 from io import StringIO
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -122,6 +123,79 @@ class AppCliTests(unittest.TestCase):
         self.assertIn("Network summary", stdout_buffer.getvalue())
         self.assertIn("Connections: 1", stdout_buffer.getvalue())
         self.assertEqual(load_network(str(network_path)).getConnectionCount(), 1)
+
+    def test_menu_can_browse_for_existing_network_file(self) -> None:
+        sample_source_path = (
+            Path(__file__).resolve().parents[1]
+            / "networks"
+            / "cli_cases"
+            / "06_single_dw_pipe_valid.json"
+        )
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            case_directory = Path(temporary_directory) / "cases"
+            case_directory.mkdir()
+            browsed_network_path = case_directory / "network.json"
+            browsed_network_path.write_text(
+                sample_source_path.read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+
+            stdout_buffer = StringIO()
+            stderr_buffer = StringIO()
+            original_cwd = Path.cwd()
+
+            try:
+                os.chdir(temporary_directory)
+
+                with (
+                    patch(
+                        "builtins.input",
+                        side_effect=["1", "b", "1", "1", "3", "", "0"],
+                    ),
+                    redirect_stdout(stdout_buffer),
+                    redirect_stderr(stderr_buffer),
+                ):
+                    exit_code = main(["menu"])
+            finally:
+                os.chdir(original_cwd)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stderr_buffer.getvalue(), "")
+            self.assertIn("Path Browser", stdout_buffer.getvalue())
+            self.assertIn("Opened network", stdout_buffer.getvalue())
+            self.assertIn("Network summary", stdout_buffer.getvalue())
+            self.assertIn("Connections: 1", stdout_buffer.getvalue())
+
+    def test_menu_can_browse_for_output_path_when_creating_network(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            output_directory = Path(temporary_directory) / "output"
+            output_directory.mkdir()
+            output_path = output_directory / "created.json"
+            stdout_buffer = StringIO()
+            stderr_buffer = StringIO()
+            original_cwd = Path.cwd()
+
+            try:
+                os.chdir(temporary_directory)
+
+                with (
+                    patch(
+                        "builtins.input",
+                        side_effect=["2", "b", "1", "n", "created.json", "0"],
+                    ),
+                    redirect_stdout(stdout_buffer),
+                    redirect_stderr(stderr_buffer),
+                ):
+                    exit_code = main(["menu"])
+            finally:
+                os.chdir(original_cwd)
+
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(stderr_buffer.getvalue(), "")
+            self.assertIn("Path Browser", stdout_buffer.getvalue())
+            self.assertIn("Created empty network", stdout_buffer.getvalue())
+            self.assertTrue(output_path.exists())
 
 
 if __name__ == "__main__":

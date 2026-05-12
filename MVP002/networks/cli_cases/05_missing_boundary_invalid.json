@@ -1,0 +1,28 @@
+{
+  "nodes": {
+    "junction_a": {
+      "piezometricHead": 92.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": false
+    },
+    "junction_b": {
+      "piezometricHead": 85.0,
+      "elevation": 0.0,
+      "externalFlow": 0.06,
+      "isBoundary": false
+    }
+  },
+  "connections": {
+    "pipe_ab": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 1469.0,
+        "n": 1.974,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "junction_a",
+      "node2Id": "junction_b"
+    }
+  }
+}

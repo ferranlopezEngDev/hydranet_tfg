@@ -118,12 +118,212 @@ def _prompt_optional_text(label: str) -> str | None:
     return raw_value or None
 
 
+def _resolve_browser_start_path(current_path: str | None) -> Path:
+    """Choose a reasonable starting folder for the path browser."""
+    if current_path is not None:
+        candidate = Path(current_path).expanduser()
+
+        if candidate.is_dir():
+            return candidate.resolve()
+
+        if candidate.exists():
+            return candidate.resolve().parent
+
+        if candidate.parent.exists():
+            return candidate.parent.resolve()
+
+    return Path.cwd().resolve()
+
+
+def _list_browser_entries(current_directory: Path) -> list[Path]:
+    """Return browser-visible entries with folders first and JSON files after."""
+    directories: list[Path] = []
+    json_files: list[Path] = []
+
+    for entry in current_directory.iterdir():
+        if entry.is_dir():
+            directories.append(entry)
+            continue
+
+        if entry.suffix.lower() == ".json":
+            json_files.append(entry)
+
+    return sorted(directories, key=lambda path: path.name.lower()) + sorted(
+        json_files,
+        key=lambda path: path.name.lower(),
+    )
+
+
+def _browse_for_path(
+    *,
+    start_path: str | None = None,
+    save_mode: bool = False,
+    default_filename: str | None = None,
+) -> str | None:
+    """Browse folders and JSON files with numbered navigation."""
+    current_directory = _resolve_browser_start_path(start_path)
+
+    while True:
+        print()
+        print("Path Browser")
+        print(f"Current folder: {current_directory}")
+        print("0. Cancel")
+        print("u. Go up")
+        print("m. Enter a path manually")
+
+        if save_mode:
+            print("n. Save in this folder with a filename")
+
+        try:
+            entries = _list_browser_entries(current_directory)
+        except OSError as exc:
+            print(f"Could not read folder: {exc}")
+            entries = []
+
+        if not entries:
+            print("<no subfolders or JSON files>")
+
+        for index, entry in enumerate(entries, start=1):
+            marker = "[D]" if entry.is_dir() else "[F]"
+            suffix = "/" if entry.is_dir() else ""
+            print(f"{index}. {marker} {entry.name}{suffix}")
+
+        choice = input("Choose an entry or action: ").strip().lower()
+
+        if choice == "0":
+            return None
+
+        if choice == "u":
+            parent_directory = current_directory.parent
+
+            if parent_directory == current_directory:
+                print("Already at the filesystem root.")
+            else:
+                current_directory = parent_directory
+
+            continue
+
+        if choice == "m":
+            manual_path = _prompt_text("Manual path")
+            return manual_path
+
+        if save_mode and choice == "n":
+            filename = _prompt_text(
+                "File name",
+                default=default_filename,
+            )
+            return str(current_directory / filename)
+
+        if not choice.isdigit():
+            print("Please choose a number or one of the browser actions.")
+            continue
+
+        index = int(choice)
+
+        if index < 1 or index > len(entries):
+            print("Please choose one of the listed entries.")
+            continue
+
+        selected_entry = entries[index - 1]
+
+        if selected_entry.is_dir():
+            current_directory = selected_entry
+            continue
+
+        return str(selected_entry)
+
+
+def _prompt_path(
+    label: str,
+    *,
+    default: str | None = None,
+    browse_start: str | None = None,
+    must_exist: bool = False,
+    allow_empty: bool = False,
+    save_mode: bool = False,
+) -> str | None:
+    """Prompt for one path, optionally opening a numbered browser with `b`."""
+    prompt_suffix = f" [{default}]" if default is not None else ""
+    empty_hint = ", Enter to skip" if allow_empty and default is None else ""
+
+    while True:
+        raw_value = input(
+            f"{label}{prompt_suffix} (type 'b' to browse{empty_hint}): "
+        ).strip()
+
+        if not raw_value:
+            if default is not None:
+                return default
+
+            if allow_empty:
+                return None
+
+            print("Please enter a path or type 'b' to browse.")
+            continue
+
+        if raw_value.lower() == "b":
+            selected_path = _browse_for_path(
+                start_path=browse_start or default,
+                save_mode=save_mode,
+                default_filename=(
+                    Path(default).name if default is not None else "network.json"
+                ),
+            )
+
+            if selected_path is None:
+                continue
+
+            if must_exist and not Path(selected_path).exists():
+                print("The selected path does not exist.")
+                continue
+
+            return selected_path
+
+        if must_exist and not Path(raw_value).exists():
+            print("The entered path does not exist.")
+            continue
+
+        return raw_value
+
+
 def _prompt_path_with_current(label: str, current_path: str | None) -> str:
     """Prompt for one path while reusing the current menu path by default."""
-    if current_path is None:
-        return _prompt_text(label)
+    selected_path = _prompt_path(
+        label,
+        default=current_path,
+        browse_start=current_path,
+        must_exist=True,
+    )
 
-    return _prompt_text(label, default=current_path)
+    if selected_path is None:
+        raise ValueError(f"{label} is required")
+
+    return selected_path
+
+
+def _prompt_output_path(label: str, default_path: str | None) -> str:
+    """Prompt for an output path with optional browser-based navigation."""
+    selected_path = _prompt_path(
+        label,
+        default=default_path,
+        browse_start=default_path,
+        save_mode=True,
+    )
+
+    if selected_path is None:
+        raise ValueError(f"{label} is required")
+
+    return selected_path
+
+
+def _prompt_optional_path(label: str, current_path: str | None = None) -> str | None:
+    """Prompt for an optional output path that may be selected by browsing."""
+    return _prompt_path(
+        label,
+        browse_start=current_path,
+        allow_empty=True,
+        save_mode=True,
+    )
 
 
 def _prompt_float(
@@ -265,6 +465,7 @@ def _print_public_help() -> None:
     print("Behavior:")
     print("  Run without arguments in a terminal to open the interactive menu.")
     print("  Use 'menu' explicitly to force the same numbered navigation.")
+    print("  In path prompts, type 'b' to browse folders and JSON files.")
     print("  Complex chained subcommands are intentionally disabled in this MVP.")
 
 
@@ -299,7 +500,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "1":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             node_id = _prompt_text("Node id")
             head = _prompt_float("Piezometric head", default=0.0)
             elevation = _prompt_float("Elevation", default=0.0)
@@ -326,7 +527,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "2":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             node_id = _prompt_text("Node id")
             argv = ["update-node", input_path, output_path, node_id]
             head = _prompt_float("New piezometric head", allow_empty=True)
@@ -354,7 +555,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "3":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             node_id = _prompt_text("Node id")
             argv = ["remove-node", input_path, output_path, node_id]
 
@@ -367,7 +568,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "4":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             connection_id = _prompt_text("Connection id")
             node1_id = _prompt_text("Node 1 id")
             node2_id = _prompt_text("Node 2 id")
@@ -391,7 +592,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "5":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             connection_id = _prompt_text("Connection id")
             argv = ["update-connection", input_path, output_path, connection_id]
             connection_type = _prompt_optional_text("New connection type")
@@ -416,7 +617,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "6":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             connection_id = _prompt_text("Connection id")
             _run_command_argv(
                 parser,
@@ -427,7 +628,7 @@ def _run_edit_menu_with_current_path(
 
         if choice == "7":
             input_path = _prompt_path_with_current("Input network path", current_path)
-            output_path = _prompt_text("Output network path", default=input_path)
+            output_path = _prompt_output_path("Output network path", input_path)
             connection_id = _prompt_text("Connection id")
             _run_command_argv(
                 parser,
@@ -466,14 +667,25 @@ def _run_interactive_menu(parser: argparse.ArgumentParser) -> int:
             return 0
 
         if choice == "1":
-            current_network_path = _prompt_text("Network path to open")
+            selected_path = _prompt_path(
+                "Network path to open",
+                default=current_network_path,
+                browse_start=current_network_path,
+                must_exist=True,
+            )
+
+            if selected_path is None:
+                print("No network selected.")
+                continue
+
+            current_network_path = selected_path
             print(f"Opened network: {current_network_path}")
             continue
 
         if choice == "2":
-            output_path = _prompt_text(
+            output_path = _prompt_output_path(
                 "Output network path",
-                default=current_network_path or None,
+                current_network_path,
             )
             _run_command_argv(parser, ["create-empty", output_path])
             current_network_path = output_path
@@ -536,9 +748,13 @@ def _run_interactive_menu(parser: argparse.ArgumentParser) -> int:
             initial_heads = _prompt_optional_float_list("Initial heads")
             problem_scale = _prompt_float("Problem scale", default=1.0)
             update_nodes = _prompt_yes_no("Update solved node heads?", default=True)
-            results_output = _prompt_optional_text("Results output path")
-            solved_network_output = _prompt_optional_text(
-                "Solved network output path"
+            results_output = _prompt_optional_path(
+                "Results output path",
+                current_network_path,
+            )
+            solved_network_output = _prompt_optional_path(
+                "Solved network output path",
+                current_network_path,
             )
             include_network_spec = _prompt_yes_no(
                 "Include network spec in result snapshot?",
