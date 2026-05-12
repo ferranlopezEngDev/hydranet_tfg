@@ -50,7 +50,6 @@ the examples in `test/`.
 - `networks/cli_cases/`: ready-made network cases for CLI validation and solve checks.
 - `test/pipe_model_testing/`: plots for elemental pipe behavior.
 - `test/systems_testing/`: assembled-network examples and SciPy checks.
-- `teoria/`: theoretical references and TFG material.
 
 ## Current Capabilities
 
@@ -75,7 +74,7 @@ the examples in `test/`.
 
 ### Add Or Change A Physical Law
 
-1. Start from `teoria/`.
+1. Start from the governing equations or the reference material available to the team.
 2. Implement the hydraulic helper in `src/hydraulic_solver/connections.py`.
 3. Validate units, signs, and parameter ranges.
 4. Export it from `src/hydraulic_solver/connections.py` if it is public.

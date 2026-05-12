@@ -29,7 +29,7 @@ dependencies inside the hydraulic layer.
 
 ## End-To-End Workflow
 
-1. Derive or confirm equations from `teoria/`.
+1. Derive or confirm equations from the available project references.
 2. Implement hydraulic behavior directly in `hydraulic_solver/`.
 3. Assemble networks with `HydraulicSystem`.
 4. Solve unknown node heads with `hydraulic_solver/solvers/`.
