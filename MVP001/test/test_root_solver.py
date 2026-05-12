@@ -8,7 +8,12 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.hydraulic_solver.solvers import solve_steady_state_with_root
-from test.systems_testing import solve_parallel_pipes, solve_three_reservoirs
+from test.systems_testing import (
+    solve_parallel_pipes,
+    solve_single_dw_pipe,
+    solve_single_kqn_pipe,
+    solve_three_reservoirs,
+)
 
 
 class RootSolverTests(unittest.TestCase):
@@ -53,6 +58,42 @@ class RootSolverTests(unittest.TestCase):
             float(result.x[0]),
             solve_three_reservoirs.EXPECTED_HEAD_NODE_4,
             places=3,
+        )
+
+    def test_root_solver_matches_single_dw_pipe_case(self) -> None:
+        system = solve_single_dw_pipe.build_system()
+
+        nodeIds, result = solve_steady_state_with_root(
+            system,
+            initialHeads=(solve_single_dw_pipe.INITIAL_DEMAND_HEAD,),
+        )
+        residuals = system.buildResidualVector(nodeIds)
+
+        self.assertEqual(nodeIds, ("demand",))
+        self.assertTrue(result.success)
+        self.assertLess(max(abs(float(value)) for value in residuals), 1e-10)
+        self.assertAlmostEqual(
+            system.getNode("demand").getPiezometricHead(),
+            solve_single_dw_pipe.EXPECTED_DEMAND_HEAD,
+            places=9,
+        )
+
+    def test_root_solver_matches_single_kqn_pipe_case(self) -> None:
+        system = solve_single_kqn_pipe.build_system()
+
+        nodeIds, result = solve_steady_state_with_root(
+            system,
+            initialHeads=(solve_single_kqn_pipe.INITIAL_DEMAND_HEAD,),
+        )
+        residuals = system.buildResidualVector(nodeIds)
+
+        self.assertEqual(nodeIds, ("demand",))
+        self.assertTrue(result.success)
+        self.assertLess(max(abs(float(value)) for value in residuals), 1e-10)
+        self.assertAlmostEqual(
+            system.getNode("demand").getPiezometricHead(),
+            solve_single_kqn_pipe.EXPECTED_DEMAND_HEAD,
+            places=9,
         )
 
 

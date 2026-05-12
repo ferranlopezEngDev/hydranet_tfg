@@ -9,6 +9,8 @@ Run scripts as modules from the repository root:
 ```bash
 ../.venv/bin/python -m unittest test.test_system_examples
 ../.venv/bin/python -m test.systems_testing.solve_parallel_pipes
+../.venv/bin/python -m test.systems_testing.solve_single_dw_pipe
+../.venv/bin/python -m test.systems_testing.solve_single_kqn_pipe
 ../.venv/bin/python -m test.systems_testing.solve_three_reservoirs
 ```
 
@@ -16,6 +18,8 @@ They can also be run directly:
 
 ```bash
 ../.venv/bin/python test/systems_testing/solve_parallel_pipes.py
+../.venv/bin/python test/systems_testing/solve_single_dw_pipe.py
+../.venv/bin/python test/systems_testing/solve_single_kqn_pipe.py
 ../.venv/bin/python test/systems_testing/solve_three_reservoirs.py
 ```
 
@@ -125,6 +129,67 @@ Common head loss = 7.650680 m
 parallel_pipe_1: Q = 0.069711 m^3/s
 parallel_pipe_2: Q = 0.050289 m^3/s
 Total flow = 0.120000 m^3/s
+```
+
+## `solve_single_dw_pipe.py`
+
+This script solves the smallest meaningful Darcy-Weisbach network:
+
+```text
+source -- pipe -- demand
+```
+
+Node setup:
+
+- `source`: prescribed head `H = 100 m`.
+- `demand`: unknown head, external flow `0.01 m^3/s` leaving the node.
+
+Connection setup:
+
+- `pipe`: `DW_pipe(length=500.0, diameter=0.15, roughness=1.5e-4, kinematicViscosity=1e-6)`.
+
+The validation logic uses the single-pipe continuity identity:
+
+- the pipe flow must match the nodal demand;
+- the solved demand head must match the Darcy law evaluated at that flow.
+
+Current output is approximately:
+
+```text
+Demand node head = 98.764695 m
+Pipe flow = 0.010000 m^3/s
+```
+
+## `solve_single_kqn_pipe.py`
+
+This script mirrors the same one-pipe topology with the local
+Darcy-derived `KQn_pipe`.
+
+Topology:
+
+```text
+source -- pipe -- demand
+```
+
+Node setup:
+
+- `source`: prescribed head `H = 100 m`.
+- `demand`: unknown head, external flow `0.01 m^3/s` leaving the node.
+
+Connection setup:
+
+- `pipe`: `KQn_pipe(length=500.0, diameter=0.15, roughness=1.5e-4, kinematicViscosity=1e-6)`.
+
+The validation checks are the same:
+
+- the solved pipe flow must equal the nodal demand;
+- the solved demand head must agree with the local power-law head variation.
+
+Current output is approximately:
+
+```text
+Demand node head = 98.764606 m
+Pipe flow = 0.010000 m^3/s
 ```
 
 ## `solve_three_reservoirs.py`
