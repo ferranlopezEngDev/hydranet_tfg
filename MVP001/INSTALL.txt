@@ -1,0 +1,204 @@
+MVP001 - INSTALACION Y PUESTA EN MARCHA
+=======================================
+
+Este archivo esta pensado para enviar la carpeta MVP001 dentro de un zip
+a otra persona para que pueda probarla sin conocer el proyecto.
+
+ESTADO PROBADO
+--------------
+- Python probado: 3.13.5
+- Sistema usado durante el desarrollo: Debian / Linux
+- Dependencias Python: ver requirements.txt
+
+RECOMENDACION DE ENVIO
+----------------------
+Envio recomendado:
+1. Comprimir solo la carpeta MVP001.
+2. No incluir la carpeta .venv del entorno local.
+3. Incluir estos archivos dentro del zip:
+   - requirements.txt
+   - install.sh
+   - install_windows.ps1
+   - install_windows.cmd
+   - INSTALL.txt
+   - GUIA_MVP001.txt
+
+OPCION A - INSTALACION RAPIDA EN LINUX / MACOS / WSL
+----------------------------------------------------
+1. Descomprimir el zip.
+2. Entrar en la carpeta MVP001.
+3. Ejecutar:
+
+   bash install.sh
+
+4. Activar el entorno:
+
+   source .venv/bin/activate
+
+5. Abrir la CLI:
+
+   python src/app_cli.py
+
+La CLI publica del MVP usa menu numerado. No esta pensada para lanzar
+subcomandos largos desde fuera.
+
+OPCION B - INSTALACION MANUAL
+-----------------------------
+1. Descomprimir el zip.
+2. Entrar en la carpeta MVP001.
+3. Crear un entorno virtual:
+
+   python3 -m venv .venv
+
+4. Activarlo:
+
+   source .venv/bin/activate
+
+5. Actualizar pip:
+
+   python -m pip install --upgrade pip
+
+6. Instalar dependencias:
+
+   python -m pip install -r requirements.txt
+
+7. Lanzar la CLI:
+
+   python src/app_cli.py
+
+INSTALACION MANUAL EN WINDOWS
+-----------------------------
+Si quien lo prueba esta en Windows y no usa WSL:
+
+Opcion rapida recomendada:
+
+1. Abrir PowerShell dentro de MVP001.
+2. Ejecutar:
+
+   .\install_windows.ps1
+
+Si PowerShell bloquea la ejecucion por politica de scripts, usar:
+
+   powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+
+Tambien se incluye un lanzador para cmd:
+
+   install_windows.cmd
+
+Opcion manual:
+
+1. Abrir PowerShell dentro de MVP001.
+2. Crear el entorno:
+
+   py -m venv .venv
+
+3. Activarlo:
+
+   .venv\Scripts\Activate.ps1
+
+4. Instalar dependencias:
+
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+
+5. Lanzar la CLI:
+
+   python src\app_cli.py
+
+Si `py` no existe en el equipo, probar con:
+
+   python -m venv .venv
+
+ARCHIVOS DE INSTALACION INCLUIDOS
+---------------------------------
+- Linux/macOS/WSL:
+  - install.sh
+- Windows PowerShell:
+  - install_windows.ps1
+- Windows cmd:
+  - install_windows.cmd
+
+PRIMERA EJECUCION RECOMENDADA
+-----------------------------
+Una vez instalado:
+
+1. Ejecutar:
+
+   python src/app_cli.py
+
+2. Usar la opcion 1 para abrir una red de ejemplo.
+3. Probar primero:
+   - networks/cli_cases/01_single_pipe_valid.json
+   - networks/cli_cases/04_isolated_node_invalid.json
+4. Usar:
+   - opcion 3 para ver el resumen
+   - opcion 4 para validar
+   - opcion 8 para resolver cuando la red sea valida
+
+COMPROBACION RAPIDA DEL ENTORNO
+-------------------------------
+Para verificar que el zip funciona bien:
+
+1. Ejecutar la suite:
+
+   python -m unittest discover -s test -p 'test_*.py'
+
+2. Comprobar compilacion:
+
+   python -m compileall src test
+
+3. Abrir la CLI:
+
+   python src/app_cli.py
+
+CASOS DE RED INCLUIDOS
+----------------------
+Dentro de networks/cli_cases/ hay cinco escenarios listos para probar:
+
+1. 01_single_pipe_valid.json
+   Caso minimo valido con una fuente, una demanda y una tuberia.
+
+2. 02_parallel_pipes_valid.json
+   Dos tuberias en paralelo descargando hacia un nodo de demanda.
+
+3. 03_three_reservoirs_valid.json
+   Un nodo desconocido conectado a tres nodos de contorno.
+
+4. 04_isolated_node_invalid.json
+   Caso invalido con un nodo aislado.
+
+5. 05_missing_boundary_invalid.json
+   Caso invalido sin condicion de contorno.
+
+SI ALGO FALLA
+-------------
+Revisar por este orden:
+
+1. La version de Python.
+   El proyecto se ha probado con Python 3.13.5.
+
+2. El entorno virtual.
+   Confirmar que el python ejecutado es el del entorno creado.
+
+3. Las dependencias.
+   Confirmar que numpy, scipy y matplotlib estan instalados.
+
+4. La ruta.
+   Ejecutar los comandos desde dentro de MVP001.
+
+5. Los tests.
+   Si los tests pasan pero la CLI falla, el problema probablemente sera
+   de entorno o de terminal.
+
+NOTA SOBRE EL ALCANCE DEL MVP
+-----------------------------
+Este MVP no intenta cubrir empaquetado profesional, instalador grafico,
+CLI avanzada orientada a scripting ni una GUI. El objetivo actual es
+tener una base estable, entendible y facil de compartir para validar:
+
+- carga y guardado de redes,
+- edicion basica,
+- validacion topologica,
+- resolucion steady-state,
+- exportacion de resultados,
+- y navegacion desde un menu simple.

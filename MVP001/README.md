@@ -41,6 +41,12 @@ the examples in `test/`.
 - `src/application/`: application-layer use cases for editing,
   validation, solving, and result export.
 - `src/app_cli.py`: first command-line application entry point.
+- `GUIA_MVP001.txt`: detailed functional guide for reviewers and testers.
+- `INSTALL.txt`: step-by-step setup guide for sharing the folder as a zip.
+- `install.sh`: quick Linux/macOS/WSL installer for the MVP environment.
+- `install_windows.ps1`: quick Windows PowerShell installer.
+- `install_windows.cmd`: Windows `cmd` launcher for the PowerShell installer.
+- `requirements.txt`: pinned Python dependencies used by this MVP.
 - `networks/cli_cases/`: ready-made network cases for CLI validation and solve checks.
 - `test/pipe_model_testing/`: plots for elemental pipe behavior.
 - `test/systems_testing/`: assembled-network examples and SciPy checks.
@@ -151,10 +157,14 @@ reloadedSystem = load_system_from_json("network.json")
 Run the CLI:
 
 ```bash
+bash install.sh
 ../.venv/bin/python src/app_cli.py
 ../.venv/bin/python -m src.app_cli menu
 ../.venv/bin/python -m src.app_cli -h
 ```
+
+Windows setup is also prepared through `install_windows.ps1` and
+`install_windows.cmd`.
 
 When started without arguments in a terminal, the CLI now opens an
 interactive numbered menu. For this MVP, the public CLI surface is

@@ -1,0 +1,630 @@
+MVP001 - GUIA EXTENSA DEL ENTREGABLE
+====================================
+
+1. QUE ES ESTE MVP
+------------------
+MVP001 es una version congelada del proyecto Hydranet pensada para:
+
+- guardar una base estable antes de futuros refactors,
+- compartir una carpeta autocontenida con otras personas,
+- validar la utilidad real del proyecto con una CLI simple,
+- y comprobar que la arquitectura actual ya soporta casos de uso de
+  modelado, validacion y resolucion de redes hidraulicas.
+
+No es todavia un producto final, ni una GUI, ni una herramienta
+empaquetada para publicacion. Es un MVP tecnico y funcional.
+
+
+2. OBJETIVO FUNCIONAL ACTUAL
+----------------------------
+El objetivo del MVP es permitir que una persona pueda:
+
+- cargar una red desde JSON,
+- guardar una red en JSON,
+- crear una red vacia,
+- editar nodos y conexiones,
+- validar la topologia,
+- inspeccionar el estado de nodos y conexiones,
+- resolver la red con un solver disponible,
+- guardar la red resuelta,
+- y exportar un snapshot de resultados.
+
+Todo esto se puede hacer ya desde una CLI con menu numerado.
+
+
+3. IDEA GENERAL DEL PROYECTO
+----------------------------
+Hydranet trabaja con una formulacion H-based:
+
+- las incognitas principales son las alturas piezometricas H en nodos no
+  de contorno,
+- las conexiones calculan el caudal a partir de las heads de sus dos
+  extremos,
+- el sistema completo se resuelve imponiendo continuidad nodal,
+- y el solver busca que los residuales de los nodos sean cercanos a
+  cero.
+
+Convencion de signo:
+
+- En una conexion, Q > 0 significa flujo desde node1 hacia node2.
+- En un nodo, externalFlow > 0 significa caudal saliendo del nodo.
+
+Esto importa mucho porque invertir una conexion cambia la interpretacion
+local del signo del caudal.
+
+
+4. CAPAS DEL MVP
+----------------
+El MVP esta organizado en tres capas claras.
+
+4.1. hydraulic_solver
+---------------------
+Es el nucleo tecnico.
+
+Se encarga de:
+
+- formulas fisicas,
+- modelos de conexion,
+- nodos,
+- sistemas,
+- persistencia JSON a nivel de spec,
+- y wrappers numericos de solver.
+
+Archivos clave:
+
+- src/hydraulic_solver/connections.py
+- src/hydraulic_solver/nodes.py
+- src/hydraulic_solver/systems.py
+- src/hydraulic_solver/factory.py
+- src/hydraulic_solver/solvers/
+
+4.2. application
+----------------
+Es la capa de casos de uso.
+
+No implementa fisica. Orquesta operaciones mas cercanas al usuario:
+
+- cargar redes,
+- guardar redes,
+- borrar archivos de red,
+- editar nodos,
+- editar conexiones,
+- validar topologia,
+- inspeccionar nodos,
+- inspeccionar conexiones,
+- listar solvers,
+- resolver redes,
+- y exportar resultados.
+
+Archivos clave:
+
+- src/application/interactors.py
+- src/application/solvers.py
+- src/application/models.py
+- src/application/errors.py
+
+4.3. app_cli
+------------
+Es la interfaz actual del MVP.
+
+La CLI publica se ha simplificado a un menu numerado para no complicar
+la experiencia del MVP con cadenas largas de subcomandos.
+
+Archivo clave:
+
+- src/app_cli.py
+
+
+5. QUE HACE EL NUCLEO HIDRAULICO
+--------------------------------
+El nucleo ya cubre varias piezas importantes.
+
+5.1. Modelos y formulas
+-----------------------
+Actualmente hay soporte para:
+
+- factor de friccion Darcy-Weisbach,
+- perdida de carga Darcy-Weisbach con signo,
+- tuberia DW_pipe,
+- modelo KQn_pipe derivado localmente,
+- modelo FixedKQn_pipe con parametros fijos,
+- conexion por interpolacion lineal,
+- conexion por regresion polinomica.
+
+Esto permite trabajar con tuberias fisicas y tambien con modelos
+aproximados o tabulados.
+
+5.2. Nodos
+----------
+Un nodo guarda:
+
+- piezometricHead,
+- elevation,
+- externalFlow,
+- isBoundary.
+
+Con eso un mismo tipo de nodo sirve tanto para nodos de contorno como
+para nodos desconocidos.
+
+5.3. Sistemas
+-------------
+HydraulicSystem es el contenedor canonico de la red.
+
+Puede:
+
+- almacenar nodos,
+- almacenar conexiones con orientacion ordenada,
+- devolver informacion topologica,
+- construir vectores de heads,
+- construir residuales,
+- validar topologia,
+- y servir de puente con los solvers.
+
+5.4. Factory y persistencia
+---------------------------
+factory.py hace de puente entre objetos Python y representaciones
+serializables.
+
+Permite:
+
+- crear conexiones por nombre,
+- crear conexiones desde specs,
+- exportar conexiones a specs,
+- construir redes completas desde dicts,
+- exportar redes completas a dicts,
+- cargar una red desde JSON,
+- guardar una red a JSON.
+
+Este punto fue clave para hacer posible la CLI y el uso futuro por GUI.
+
+
+6. QUE HACE LA CAPA APPLICATION
+-------------------------------
+La capa application expone casos de uso reutilizables.
+
+Casos de uso importantes:
+
+- create_empty_network()
+- load_network(path)
+- save_network(system, path)
+- delete_network_file(path)
+- get_network_summary(system)
+- validate_network(system)
+- inspect_node(system, node_id)
+- inspect_connection(system, connection_id)
+- add_node(...)
+- update_node(...)
+- remove_node(...)
+- add_connection(...)
+- update_connection(...)
+- remove_connection(...)
+- reverse_connection_orientation(...)
+- list_solvers()
+- solve_network(system, ...)
+- solve_network_file(path, ...)
+- build_result_snapshot(system, outcome)
+- save_result_snapshot(system, outcome, path)
+
+Esto ya define una base razonable para una futura GUI, porque la GUI no
+tendria que hablar directamente con el solver de bajo nivel.
+
+
+7. SOLVERS DISPONIBLES
+----------------------
+El MVP expone dos nombres de solver:
+
+1. scipy
+   Solver por defecto.
+   Usa los heads almacenados en los nodos desconocidos como semilla
+   inicial.
+
+2. root
+   Envoltorio sobre SciPy root que permite pasar initial_heads de forma
+   explicita.
+
+Los dos estan registrados en src/application/solvers.py.
+
+El menu permite listarlos y usarlos al resolver.
+
+
+8. QUE HACE LA CLI DEL MVP
+--------------------------
+La CLI publica del MVP esta pensada para terminal interactiva.
+
+Formas de abrirla:
+
+- python src/app_cli.py
+- python src/app_cli.py menu
+
+La ayuda publica:
+
+- python src/app_cli.py -h
+
+No se pretende que el usuario lance operaciones complejas y encadenadas
+desde fuera. La idea del MVP es navegar con numeros.
+
+8.1. Menu principal
+-------------------
+Opciones actuales del menu:
+
+0. Exit
+1. Open/import network
+2. Create empty network
+3. Show network summary
+4. Validate network
+5. Inspect node
+6. Inspect connection
+7. Edit network
+8. Solve network
+9. List available solvers
+10. Delete network file
+11. Show menu help
+
+8.2. Submenu de edicion
+-----------------------
+Opciones actuales:
+
+0. Back
+1. Add node
+2. Update node
+3. Remove node
+4. Add connection
+5. Update connection
+6. Remove connection
+7. Reverse connection orientation
+
+8.3. Comportamiento pensado
+---------------------------
+El menu recuerda la red actual abierta, de modo que no hace falta
+reescribir la ruta en cada paso si se quiere seguir trabajando sobre el
+mismo archivo.
+
+
+9. QUE INFORMACION PUEDE VER UN USUARIO
+---------------------------------------
+El MVP ya devuelve informacion bastante rica.
+
+9.1. Resumen de red
+-------------------
+Incluye:
+
+- numero de nodos,
+- numero de conexiones,
+- lista de boundary nodes,
+- lista de nodos de head desconocido,
+- lista de nodos aislados,
+- componentes conectadas,
+- y tipos de conexion presentes.
+
+9.2. Validacion
+---------------
+La validacion devuelve:
+
+- si la red es valida o no,
+- un mensaje claro,
+- y la informacion topologica usada para diagnosticar el caso.
+
+9.3. Inspeccion de nodo
+-----------------------
+La inspeccion de un nodo muestra:
+
+- piezometric head,
+- pressure head,
+- elevation,
+- external flow,
+- si es boundary,
+- conexiones incidentes,
+- y balance nodal.
+
+9.4. Inspeccion de conexion
+---------------------------
+La inspeccion de una conexion muestra:
+
+- tipo de conexion,
+- endpoints ordenados,
+- parametros exportables,
+- y caudal actual.
+
+9.5. Resultados de solve
+------------------------
+El solve devuelve:
+
+- solver usado,
+- node_ids resueltos,
+- solved_heads,
+- residuals,
+- success,
+- message,
+- problem_scale,
+- update_nodes,
+- raw_result del optimizador.
+
+
+10. QUE SE GUARDA CUANDO SE EXPORTAN RESULTADOS
+-----------------------------------------------
+El snapshot de resultados puede incluir:
+
+- metadatos del solver,
+- resumen de red,
+- validacion,
+- datos del solve,
+- resultados por nodo,
+- resultados por conexion,
+- y opcionalmente la networkSpec completa.
+
+Esto es util para comparar ejecuciones, revisar salidas o guardar
+evidencia de una corrida.
+
+
+11. FORMATO DE RED
+------------------
+Las redes se guardan en JSON.
+
+Conceptualmente el formato tiene:
+
+- nodes
+- connections
+
+Cada conexion guarda:
+
+- node1Id
+- node2Id
+- type
+- params
+
+Ejemplo conceptual:
+
+{
+  "nodes": {
+    "source": {
+      "piezometricHead": 100.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "demand": {
+      "piezometricHead": 95.0,
+      "elevation": 0.0,
+      "externalFlow": 0.12,
+      "isBoundary": false
+    }
+  },
+  "connections": {
+    "pipe_1": {
+      "node1Id": "source",
+      "node2Id": "demand",
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 1469.0,
+        "n": 1.974
+      }
+    }
+  }
+}
+
+
+12. CASOS DE RED INCLUIDOS EN EL MVP
+------------------------------------
+Se incluyen cinco redes listas para probar la CLI.
+
+12.1. 01_single_pipe_valid.json
+--------------------------------
+Caso minimo y valido.
+
+Sirve para:
+
+- abrir la red,
+- ver resumen,
+- validar,
+- inspeccionar la tuberia,
+- y resolver un caso pequeno y rapido.
+
+12.2. 02_parallel_pipes_valid.json
+----------------------------------
+Caso valido con dos ramas en paralelo.
+
+Sirve para:
+
+- probar una topologia no trivial,
+- comprobar resumen de tipos y conexiones,
+- y validar la resolucion de caudales repartidos.
+
+12.3. 03_three_reservoirs_valid.json
+------------------------------------
+Caso valido de tres reservorios.
+
+Sirve para:
+
+- probar un problema clasico,
+- y confirmar que el solver maneja varias condiciones de contorno.
+
+12.4. 04_isolated_node_invalid.json
+-----------------------------------
+Caso invalido con nodo aislado.
+
+Sirve para:
+
+- comprobar que la validacion detecta nodos aislados,
+- y revisar mensajes de error antes de un solve.
+
+12.5. 05_missing_boundary_invalid.json
+--------------------------------------
+Caso invalido sin boundary nodes.
+
+Sirve para:
+
+- comprobar que la validacion falla cuando no hay condicion de
+  contorno suficiente.
+
+
+13. FLUJOS DE PRUEBA RECOMENDADOS
+---------------------------------
+Si otra persona recibe el zip, estos flujos son buenos primeros pasos.
+
+Flujo A - sanity check minimo
+-----------------------------
+1. Instalar dependencias.
+2. Ejecutar la suite de tests.
+3. Abrir la CLI.
+4. Abrir 01_single_pipe_valid.json.
+5. Ver resumen.
+6. Validar.
+7. Resolver.
+
+Flujo B - revisar errores controlados
+-------------------------------------
+1. Abrir 04_isolated_node_invalid.json.
+2. Ver resumen.
+3. Validar.
+4. Confirmar que la validacion falla por la razon esperada.
+
+Flujo C - revisar un caso mas rico
+----------------------------------
+1. Abrir 02_parallel_pipes_valid.json o 03_three_reservoirs_valid.json.
+2. Inspeccionar nodos y conexiones.
+3. Resolver.
+4. Guardar resultados si se desea.
+
+Flujo D - editar una red
+------------------------
+1. Crear una red vacia.
+2. Entrar en Edit network.
+3. Anadir nodos.
+4. Anadir conexiones.
+5. Validar.
+6. Resolver.
+
+
+14. TESTS AUTOMATICOS INCLUIDOS
+-------------------------------
+La carpeta test/ ya contiene regresion automatica con unittest.
+
+Cobertura relevante actual:
+
+- modelos fisicos,
+- nodos,
+- factory,
+- constructor de sistemas,
+- solvers,
+- interactores de application,
+- CLI,
+- y casos JSON de ejemplo.
+
+Comando principal:
+
+python -m unittest discover -s test -p 'test_*.py'
+
+Estado verificado en esta entrega:
+
+- 37 tests pasando.
+
+
+15. LIMITACIONES ACTUALES
+-------------------------
+Aunque el MVP ya es util, hay limites claros.
+
+15.1. CLI
+---------
+- La interfaz publica es solo menu interactivo.
+- No esta pensada para scripting complejo desde fuera.
+
+15.2. Packaging
+---------------
+- No hay pyproject.toml ni empaquetado formal.
+- La distribucion pensada ahora es carpeta o zip.
+
+15.3. GUI
+---------
+- No hay interfaz grafica todavia.
+- La capa application prepara el terreno, pero la GUI no existe.
+
+15.4. Alcance tecnico
+---------------------
+- El foco esta en steady-state.
+- No hay simulacion transitoria.
+- No hay optimizacion de redes.
+- No hay gestion de proyectos multi-escenario avanzada.
+
+15.5. Robustez de producto
+--------------------------
+- Es un MVP tecnico, no una app endurecida para usuarios finales.
+- La validacion y la UX son suficientes para pruebas, no para una
+  distribucion profesional cerrada.
+
+
+16. POR QUE ESTA VERSION ES UTIL AUN SIN SER FINAL
+--------------------------------------------------
+MVP001 ya tiene valor porque:
+
+- fija una base antes de refactors,
+- demuestra que el dominio hidraulico funciona,
+- demuestra que JSON ya sirve como persistencia,
+- demuestra que la aplicacion puede orquestar casos de uso reales,
+- y demuestra que una CLI navegable ya permite probar el sistema.
+
+Es una buena version para compartir con tutores, companeros o testers
+internos.
+
+
+17. ARCHIVOS IMPORTANTES PARA LEER PRIMERO
+------------------------------------------
+Si alguien quiere orientarse rapido, este orden funciona bien:
+
+1. INSTALL.txt
+2. README.md
+3. GUIA_MVP001.txt
+4. src/README.md
+5. src/application/README.md
+6. src/hydraulic_solver/README.md
+7. networks/cli_cases/README.md
+
+
+18. ENTREGA A PERSONAS QUE USAN WINDOWS
+---------------------------------------
+MVP001 ya incluye instalacion preparada para Windows:
+
+- install_windows.ps1
+- install_windows.cmd
+
+Uso recomendado en Windows:
+
+1. Abrir PowerShell dentro de MVP001.
+2. Ejecutar:
+
+   .\install_windows.ps1
+
+3. Si hace falta saltar la politica de scripts:
+
+   powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
+
+4. Alternativamente, desde cmd:
+
+   install_windows.cmd
+
+Despues:
+
+1. Activar el entorno:
+
+   .venv\Scripts\Activate.ps1
+
+2. Lanzar la CLI:
+
+   python src\app_cli.py
+
+
+19. RECOMENDACION FINAL PARA TESTERS
+------------------------------------
+No intentes empezar por crear una red grande desde cero.
+
+El camino mas util es:
+
+1. instalar,
+2. ejecutar tests,
+3. abrir la CLI,
+4. cargar uno de los cinco casos,
+5. validar,
+6. resolver un caso valido,
+7. y solo despues probar la edicion manual.
+
+Eso da confianza rapidamente y ayuda a separar problemas de entorno de
+problemas reales del proyecto.

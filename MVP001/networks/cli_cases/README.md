@@ -15,24 +15,26 @@ These network files are ready-made scenarios for exercising the CLI.
 - `05_missing_boundary_invalid.json`: connected network with no
   boundary node.
 
-## Suggested Commands
+## Suggested MVP Flow
 
-Run summary and validation:
+The public CLI surface of the MVP is menu-driven.
 
-```bash
-cd MVP001
-../.venv/bin/python src/app_cli.py summary networks/cli_cases/01_single_pipe_valid.json
-../.venv/bin/python src/app_cli.py validate networks/cli_cases/04_isolated_node_invalid.json
-```
-
-Solve one valid case:
+1. Start the CLI:
 
 ```bash
 cd MVP001
-../.venv/bin/python src/app_cli.py solve \
-  networks/cli_cases/02_parallel_pipes_valid.json \
-  --solver root \
-  --results-output /tmp/parallel_results.json
+../.venv/bin/python src/app_cli.py
 ```
 
-Use the invalid cases to verify CLI validation output before solving.
+2. Use option `1` to open one case file, for example:
+
+- `networks/cli_cases/01_single_pipe_valid.json`
+- `networks/cli_cases/04_isolated_node_invalid.json`
+
+3. Use:
+
+- option `3` to show the summary,
+- option `4` to validate,
+- option `8` to solve valid cases.
+
+Use the invalid cases to verify validation behavior before solving.
