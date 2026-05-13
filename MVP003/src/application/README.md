@@ -1,48 +1,52 @@
 # `src/application`
 
-Este paquete contiene la capa de aplicacion construida encima del
-backend hidraulico.
+This package contains the application layer built on top of the
+hydraulic backend.
 
-## Objetivo
+## Goal
 
-Su trabajo es orquestar flujos de uso, no redefinir la fisica.
+Its job is to orchestrate user-facing workflows, not to redefine the
+physics.
 
-Ejemplos de responsabilidades:
+Examples of responsibilities:
 
-- cargar y guardar redes;
-- editar nodos y conexiones;
-- validar topologia;
-- seleccionar y ejecutar solves;
-- construir snapshots para la GUI.
+- load and save networks;
+- edit nodes and connections;
+- validate topology;
+- select and execute solves;
+- build export payloads for the GUI.
 
-## Archivos principales
+## Main files
 
-- `interactors.py`: operaciones de alto nivel sobre redes y resultados.
-- `models.py`: estructuras de datos orientadas a flujos de aplicacion.
-- `solvers.py`: registro y normalizacion de configuracion de solver.
-- `errors.py`: excepciones de la capa.
+- `interactors.py`: high-level operations on networks and results.
+- `models.py`: data structures oriented to application workflows.
+- `solvers.py`: solver registry and solver-configuration normalization.
+- `forms.py`: GUI-neutral form adapters built from declarative schemas.
+- `errors.py`: application-layer exceptions.
 
-## Relacion con el backend
+## Relation to the backend
 
-La capa `application` consume `src/hydraulic_solver/` y prepara una
-frontera estable para la GUI actual.
+The `application` layer consumes `src/hydraulic_solver/` and prepares a
+stable boundary for the current GUI.
 
-En `MVP003` ya reutiliza:
+In `MVP003` it already reuses:
 
-- resultados derivados del backend;
-- serializacion canonical;
-- validacion estructural del sistema.
+- backend-derived results;
+- canonical serialization;
+- structural validation from the hydraulic system;
+- declarative parameter metadata for form generation.
 
-## Relacion con la GUI
+## Relation to the GUI
 
-La GUI actual se apoya en esta capa para:
+The GUI currently relies on this layer to:
 
-- abrir/guardar archivos;
-- lanzar solves;
-- construir snapshots serializables;
-- presentar resúmenes de red y resultados.
+- open and save files;
+- normalize solver configuration;
+- build backend-driven form fields;
+- prepare exportable result payloads;
+- present network and result summaries.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Arquitectura e implementacion](../../docs/arquitectura_e_implementacion.md)
-- [JSON, resultados y GUI](../../docs/json_resultados_y_gui.md)
+- [Architecture and implementation](../../docs/arquitectura_e_implementacion.md)
+- [JSON, results, and GUI](../../docs/json_resultados_y_gui.md)

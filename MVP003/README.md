@@ -1,40 +1,40 @@
 # Hydranet MVP003
 
-`MVP003` es la version actual de trabajo de Hydranet.
+`MVP003` is the current working version of Hydranet.
 
-Su objetivo es consolidar el backend como framework reutilizable para
-simular redes hidraulicas estacionarias, y a la vez dejar una frontera
-mucho mas limpia para la aplicacion y la GUI.
+Its goal is to consolidate the backend as a reusable framework for
+steady-state hydraulic-network simulation while exposing a much cleaner
+boundary for the application layer and the GUI.
 
-## Que aporta MVP003
+## What MVP003 adds
 
-- API publica mas clara mediante el paquete `hydranet/`.
-- Metadatos declarativos de parametros para modelos configurables.
-- Reutilizacion de esos metadatos en factory, JSON, GUI y tests.
-- `SolveResult` propio del framework.
-- Resultados derivados por nodo y por conexion.
-- Indice interno de conexiones incidentes para ensamblaje mas eficiente.
-- Base mejor preparada para crecer sin duplicacion innecesaria.
+- A clearer public API through the `hydranet/` package.
+- Declarative parameter metadata for configurable models.
+- Reuse of that metadata in the factory, JSON, GUI, tests, and docs.
+- A framework-owned `SolveResult`.
+- Derived results per node and per connection.
+- An internal incident-connection index for more efficient residual assembly.
+- A better base for future growth with less duplication.
 
-## Lectura recomendada
+## Recommended reading
 
-- [Mapa de documentacion](docs/README.md)
-- [Fundamentos fisicos y matematicos](docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](docs/arquitectura_e_implementacion.md)
-- [JSON, resultados y GUI](docs/json_resultados_y_gui.md)
-- [Guia de extension](docs/guia_de_extension.md)
+- [Documentation map](docs/README.md)
+- [Physical and mathematical foundations](docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](docs/arquitectura_e_implementacion.md)
+- [JSON, results, and GUI](docs/json_resultados_y_gui.md)
+- [Extension guide](docs/guia_de_extension.md)
 
-## Estructura
+## Structure
 
-- `hydranet/`: API publica del framework.
-- `src/hydraulic_solver/`: nucleo hidraulico y numerico.
-- `src/application/`: flujos de trabajo para app/GUI y snapshots.
-- `src/gui/`: interfaz `tkinter`.
-- `networks/`: casos JSON de ejemplo y de estres.
-- `test/`: tests automaticos y scripts de comprobacion.
-- `benchmarks/`: scripts ligeros y reproducibles de benchmark.
+- `hydranet/`: recommended public framework API.
+- `src/hydraulic_solver/`: hydraulic and numerical core.
+- `src/application/`: workflows for the app/GUI and export payloads.
+- `src/gui/`: `tkinter` desktop interface.
+- `networks/`: example and stress-case JSON inputs.
+- `test/`: automated tests and executable checking scripts.
+- `benchmarks/`: lightweight and reproducible benchmark scripts.
 
-## Ejemplo minimo
+## Minimal example
 
 ```python
 from hydranet import HydraulicSystem, Node
@@ -60,9 +60,9 @@ print(result.node_heads)
 print(result.connection_flows)
 ```
 
-## Comandos habituales
+## Common commands
 
-Desde dentro de `MVP003/`:
+From inside `MVP003/`:
 
 ```bash
 python -m unittest discover -s test -p 'test_*.py'
@@ -70,33 +70,33 @@ python -m compileall hydranet src test
 python src/gui_app.py
 ```
 
-## Instalacion
+## Installation
 
-Ver:
+See:
 
 - [INSTALL.txt](INSTALL.txt)
 - [GUIA_MVP003.md](GUIA_MVP003.md)
 
 ## Benchmarks
 
-Ejemplos:
+Examples:
 
 ```bash
 python benchmarks/generate_synthetic_networks.py solver_unknown_heads 10
 python benchmarks/benchmark_solver.py networks/stress_cases/solver_stress_unknown_heads_10.json
 ```
 
-Mas detalle en [benchmarks/README.md](benchmarks/README.md).
+More detail in [benchmarks/README.md](benchmarks/README.md).
 
-## Estado actual y limites
+## Current state and limits
 
-- La formulacion sigue siendo H-based.
-- El solve actual sigue siendo denso y basado en `scipy.optimize.root`.
-- El framework ya cubre bien casos pequenos y medianos.
-- Redes muy grandes requeriran continuation mas rica, Jacobianas sparse y
-  metodos numericos mas escalables.
+- The formulation remains H-based.
+- The current solve path is still dense and still uses `scipy.optimize.root`.
+- The framework already covers small and medium cases well.
+- Very large networks will require richer continuation, sparse Jacobians,
+  and more scalable numerical methods.
 
-## Trabajo futuro
+## Future work
 
-El backlog vivo para la siguiente iteracion se mantiene en
+The living backlog for the next iteration remains in
 [README_PENDING.md](README_PENDING.md).

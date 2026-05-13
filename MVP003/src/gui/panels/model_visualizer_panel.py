@@ -48,7 +48,7 @@ class ModelVisualizerPanel(ttk.Frame):
         self._build_plot()
 
     def _build_header(self) -> None:
-        frame = ttk.LabelFrame(self, text="Configuracion del Visualizador", padding=10)
+        frame = ttk.LabelFrame(self, text="Visualizer configuration", padding=10)
         frame.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         frame.columnconfigure(1, weight=1)
         frame.columnconfigure(3, weight=1)
@@ -87,37 +87,37 @@ class ModelVisualizerPanel(ttk.Frame):
         button_frame.grid(row=1, column=0, columnspan=6, sticky="e", pady=(10, 0))
         ttk.Button(
             button_frame,
-            text="Plot Modelo Primario",
+            text="Plot primary model",
             command=self._handle_plot_primary,
         ).grid(row=0, column=0, padx=(0, 6))
         ttk.Button(
             button_frame,
-            text="Comparar Modelos",
+            text="Compare models",
             command=self._handle_compare_models,
         ).grid(row=0, column=1, padx=(0, 6))
         ttk.Button(
             button_frame,
-            text="Usar Conexion Seleccionada",
+            text="Use selected connection",
             command=self._handle_use_selected_connection,
         ).grid(row=0, column=2)
         ttk.Button(
             button_frame,
-            text="Ayuda",
+            text="Help",
             command=self._show_help,
         ).grid(row=0, column=3, padx=(6, 0))
 
         attach_tooltip(
             self.minHeadEntry,
-            "Limite inferior del eje H2-H1 que se muestrea para construir la curva.",
+            "Lower limit of the H2-H1 axis sampled to build the curve.",
         )
         attach_tooltip(
             self.maxHeadEntry,
-            "Limite superior del eje H2-H1 que se muestrea para construir la curva.",
+            "Upper limit of the H2-H1 axis sampled to build the curve.",
         )
         attach_tooltip(
             self.sampleCountEntry,
-            "Numero de puntos usados para muestrear la respuesta del modelo. "
-            "Mas puntos dan una curva mas suave pero tardan mas.",
+            "Number of points used to sample the model response. More points "
+            "produce smoother curves but take longer.",
         )
 
     def _build_editors(self) -> None:
@@ -127,7 +127,7 @@ class ModelVisualizerPanel(ttk.Frame):
         editors.add(self._build_model_editor(editors, primary=False), weight=1)
 
     def _build_model_editor(self, master: tk.Misc, *, primary: bool) -> ttk.Frame:
-        title = "Modelo Primario" if primary else "Modelo Secundario"
+        title = "Primary model" if primary else "Secondary model"
         frame = ttk.LabelFrame(master, text=title, padding=10)
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(2, weight=1)
@@ -155,13 +155,13 @@ class ModelVisualizerPanel(ttk.Frame):
         if primary:
             ttk.Button(
                 frame,
-                text="Cargar Template",
+                text="Load defaults",
                 command=lambda: self._load_template(primary=True),
             ).grid(row=1, column=0, sticky="w", pady=(6, 6))
         else:
             compare_check = ttk.Checkbutton(
                 frame,
-                text="Activar comparacion",
+                text="Enable comparison",
                 variable=self.compareEnabledVar,
             )
             compare_check.grid(row=1, column=0, sticky="w", pady=(6, 6))
@@ -186,26 +186,26 @@ class ModelVisualizerPanel(ttk.Frame):
 
         attach_tooltip(
             type_combo,
-            "Selecciona el tipo de conexion a visualizar o comparar.",
+            "Select the connection type to visualize or compare.",
         )
         attach_tooltip(
             text_widget,
-            "Parametros JSON del modelo seleccionado. Puedes editar valores "
-            "y volver a plotear o comparar.",
+            "JSON parameters for the selected model. You can edit values and "
+            "plot or compare again.",
         )
 
         return frame
 
     def _build_plot(self) -> None:
-        frame = ttk.LabelFrame(self, text="Plot de Modelos", padding=8)
+        frame = ttk.LabelFrame(self, text="Model plot", padding=8)
         frame.grid(row=2, column=0, sticky="nsew")
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(1, weight=1)
         ttk.Label(
             frame,
             text=(
-                "Toolbar interactiva: usa Home, Back, Pan, Zoom y Save para "
-                "explorar la curva."
+                "Interactive toolbar: use Home, Back, Pan, Zoom, and Save to "
+                "explore the curve."
             ),
         ).grid(row=0, column=0, sticky="w", pady=(0, 6))
         self.plotCanvas = PlotCanvas(frame)
@@ -213,13 +213,13 @@ class ModelVisualizerPanel(ttk.Frame):
 
     def _show_help(self) -> None:
         messagebox.showinfo(
-            "Ayuda del Visualizador de Modelos",
+            "Model visualizer help",
             (
-                "Visualizador de modelos:\n"
-                "- Define el rango H2-H1 y el numero de muestras.\n"
-                "- Edita los parametros JSON del modelo primario y secundario.\n"
-                "- Usa la toolbar del plot para zoom, pan, volver atras y guardar.\n"
-                "- `Comparar Modelos` superpone curvas en el mismo sistema de ejes."
+                "Model visualizer:\n"
+                "- Define the H2-H1 range and the number of samples.\n"
+                "- Edit the JSON parameters of the primary and secondary models.\n"
+                "- Use the plot toolbar for zoom, pan, back, and save.\n"
+                "- `Compare models` overlays curves on the same axes."
             ),
             parent=self,
         )
@@ -248,30 +248,30 @@ class ModelVisualizerPanel(ttk.Frame):
             primary_series = build_model_curve_series(
                 self.primaryTypeVar.get().strip(),
                 parse_json_mapping(self.primaryParamsText.get("1.0", tk.END)),
-                label=f"Primario: {self.primaryTypeVar.get().strip()}",
+                label=f"Primary: {self.primaryTypeVar.get().strip()}",
                 **self._get_sampling_arguments(),
             )
         except Exception as exc:
             messagebox.showerror("Model Plot Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo plotear el modelo primario: {exc}")
+            self._on_status(f"Could not plot the primary model: {exc}")
             return
 
         self.plotCanvas.set_figure(
             build_curve_figure(
-                title="Visualizador de Modelos",
+                title="Model visualizer",
                 x_label="Head Difference H2 - H1",
                 y_label="Flow Rate Q",
                 series_collection=(primary_series,),
             )
         )
-        self._on_status(f"Plot actualizado para {self.primaryTypeVar.get().strip()}")
+        self._on_status(f"Plot updated for {self.primaryTypeVar.get().strip()}")
 
     def _handle_compare_models(self) -> None:
         try:
             primary_series = build_model_curve_series(
                 self.primaryTypeVar.get().strip(),
                 parse_json_mapping(self.primaryParamsText.get("1.0", tk.END)),
-                label=f"Primario: {self.primaryTypeVar.get().strip()}",
+                label=f"Primary: {self.primaryTypeVar.get().strip()}",
                 **self._get_sampling_arguments(),
             )
             series_collection = [primary_series]
@@ -280,24 +280,24 @@ class ModelVisualizerPanel(ttk.Frame):
                 secondary_series = build_model_curve_series(
                     self.secondaryTypeVar.get().strip(),
                     parse_json_mapping(self.secondaryParamsText.get("1.0", tk.END)),
-                    label=f"Secundario: {self.secondaryTypeVar.get().strip()}",
+                    label=f"Secondary: {self.secondaryTypeVar.get().strip()}",
                     **self._get_sampling_arguments(),
                 )
                 series_collection.append(secondary_series)
         except Exception as exc:
             messagebox.showerror("Model Comparison Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo comparar modelos: {exc}")
+            self._on_status(f"Could not compare the models: {exc}")
             return
 
         self.plotCanvas.set_figure(
             build_curve_figure(
-                title="Comparacion de Modelos de Conexion",
+                title="Connection model comparison",
                 x_label="Head Difference H2 - H1",
                 y_label="Flow Rate Q",
                 series_collection=tuple(series_collection),
             )
         )
-        self._on_status("Comparacion de modelos actualizada")
+        self._on_status("Model comparison updated")
 
     def _handle_use_selected_connection(self) -> None:
         connection_id = self._state.selected_connection_id
@@ -305,7 +305,7 @@ class ModelVisualizerPanel(ttk.Frame):
         if not connection_id or connection_id not in self._state.system.connections:
             messagebox.showinfo(
                 "Use Selected Connection",
-                "Primero selecciona una conexion en el Editor de redes.",
+                "Select one connection in the network editor first.",
                 parent=self,
             )
             return
@@ -317,7 +317,7 @@ class ModelVisualizerPanel(ttk.Frame):
         self.primaryTypeVar.set(get_connection_type_name(connection_entry.connection))
         self.primaryParamsText.delete("1.0", tk.END)
         self.primaryParamsText.insert("1.0", format_json(spec["params"]))
-        self._on_status(f"Conexion {connection_id} cargada en el modelo primario")
+        self._on_status(f"Connection {connection_id} loaded into the primary model")
 
     def set_primary_model(self, connection_type: str, params_text: str) -> None:
         """Seed the primary model editor from another mode."""
@@ -327,7 +327,7 @@ class ModelVisualizerPanel(ttk.Frame):
         self._handle_plot_primary()
 
     def refresh(self) -> None:
-        if self._state.last_snapshot is None and not self.primaryParamsText.get(
+        if self._state.last_solve_result is None and not self.primaryParamsText.get(
             "1.0",
             tk.END,
         ).strip():

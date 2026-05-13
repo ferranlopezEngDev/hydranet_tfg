@@ -1,38 +1,38 @@
-# Arquitectura e implementacion
+# Architecture and Implementation
 
-Este documento explica como `MVP003` materializa en codigo la
-formulacion hidraulica descrita en los fundamentos.
+This document explains how `MVP003` materializes in code the hydraulic
+formulation described in the foundations document.
 
-## 1. Capas del proyecto
+## 1. Project layers
 
-`MVP003` separa el proyecto en cuatro niveles principales:
+`MVP003` separates the project into four main levels:
 
 1. `hydranet/`
-   API publica del framework.
+   Public framework API.
 2. `src/hydraulic_solver/`
-   nucleo hidraulico y numerico.
+   Hydraulic and numerical core.
 3. `src/application/`
-   flujos de trabajo para app/GUI y snapshots.
+   Workflows for the app/GUI and export payloads.
 4. `src/gui/`
-   interfaz `tkinter`.
+   `tkinter` interface.
 
-La direccion de dependencias deseada es:
+Desired dependency direction:
 
 ```text
 GUI -> application -> hydraulic_solver
-framework public API -> hydraulic_solver
+public framework API -> hydraulic_solver
 ```
 
-La GUI no debe conocer:
+The GUI should not know about:
 
 - `OptimizeResult`;
-- detalles de `scipy.optimize.root`;
-- estructuras internas de ensamblaje;
-- ni validaciones duplicadas de parametros.
+- `scipy.optimize.root` details;
+- internal residual-assembly structures;
+- duplicated parameter validations.
 
-## 2. API publica del framework
+## 2. Public framework API
 
-La entrada recomendada para codigo cliente es:
+The recommended entry point for client code is:
 
 ```python
 from hydranet import HydraulicSystem, Node
@@ -41,157 +41,155 @@ from hydranet.solvers import solve
 from hydranet.io import load_system_from_json, save_system_to_json
 ```
 
-Objetivo de esta capa:
+Goals of this layer:
 
-- ofrecer imports cortos y estables;
-- ocultar mejor la estructura interna de `src/`;
-- preparar el backend para integracion con una app o GUI.
+- offer short and stable imports;
+- hide more of the internal `src/` structure;
+- prepare the backend for app and GUI integration.
 
-## 3. Objetos nucleares
+## 3. Core objects
 
 ## 3.1. `Node`
 
-Representa un nodo con:
+Represents one node with:
 
 - `piezometricHead`;
 - `elevation`;
 - `externalFlow`;
 - `isBoundary`.
 
-Un mismo tipo de nodo sirve para:
+The same node type is used for:
 
-- nodos frontera;
-- nodos desconocidos;
-- nodos de evaluacion de estado actual.
+- boundary nodes;
+- unknown-head nodes;
+- current-state evaluation nodes.
 
 ## 3.2. `Connection`
 
-Es la interfaz minima de un elemento hidraulico:
+This is the minimum interface of one hydraulic element:
 
 ```python
 connection.getFlowRate(H1, H2)
 ```
 
-Opcionalmente una conexion puede exponer:
+Optionally a connection may expose:
 
 ```python
 connection.getResultDetails(H1, H2, flowRate=None)
 ```
 
-para devolver magnitudes derivadas adicionales.
+to return extra derived quantities.
 
 ## 3.3. `ConnectionEntry`
 
-Acopla:
+It couples:
 
-- un objeto `Connection`;
-- su `node1Id`;
-- su `node2Id`.
+- one `Connection` object;
+- its `node1Id`;
+- its `node2Id`.
 
-Su trabajo es conservar la orientacion y aplicar correctamente la
-convencion de signos cuando un residual pregunta por el caudal saliendo
-de un nodo concreto.
+Its job is to preserve orientation and apply the project sign
+convention when a residual asks for the flow leaving one specific node.
 
 ## 3.4. `HydraulicSystem`
 
-Es el contenedor canónico de la red.
+This is the canonical network container.
 
-Responsabilidades principales:
+Main responsibilities:
 
-- almacenar nodos y conexiones;
-- mantener la topologia;
-- ensamblar residuales nodales;
-- construir vectores y overrides para el solver;
-- validar la estructura de la red.
+- store nodes and connections;
+- maintain topology;
+- assemble nodal residuals;
+- build vectors and head overrides for the solver;
+- validate network structure.
 
-## 4. Indice de conexiones incidentes
+## 4. Incident-connection index
 
-En `MVP002`, iterar conexiones de un nodo podia implicar recorrer todas
-las conexiones de la red.
+In `MVP002`, iterating over the connections of a node could imply
+scanning all network connections.
 
-`MVP003` añade un indice interno por nodo:
+`MVP003` adds an internal per-node index:
 
 ```text
-node_id -> connection_ids incidentes
+node_id -> incident connection_ids
 ```
 
-Ventajas:
+Advantages:
 
-- `iterConnectionsForNode(...)` pasa a depender del grado del nodo;
-- el ensamblaje de residuales reduce trabajo repetido;
-- se mejora la base para redes medianas y grandes.
+- `iterConnectionsForNode(...)` depends on node degree rather than total connection count;
+- residual assembly removes repeated work;
+- the base is better prepared for medium and large networks.
 
-El indice se actualiza al:
+The index is updated when:
 
-- añadir nodos;
-- eliminar nodos;
-- añadir conexiones;
-- eliminar conexiones;
-- reemplazar conexiones o extremos.
+- adding nodes;
+- removing nodes;
+- adding connections;
+- removing connections;
+- replacing connections or endpoints.
 
-## 5. Parametros declarativos
+## 5. Declarative parameters
 
-`MVP003` introduce:
+`MVP003` introduces:
 
 - `ParameterSpec`;
 - `Parameterized`.
 
-Objetivo:
+Goal:
 
-- declarar parametros una sola vez;
-- reutilizar esa declaracion en factory, JSON, GUI, tests y docs.
+- declare parameters once;
+- reuse that declaration in the factory, JSON, GUI, tests, and docs.
 
-Cada `ParameterSpec` puede expresar:
+Each `ParameterSpec` can express:
 
-- nombre;
-- etiqueta;
-- tipo;
-- unidad;
-- valor por defecto;
-- obligatorio u opcional;
-- limites numericos;
-- opciones;
-- descripcion;
-- si es avanzado;
-- y el atributo interno que almacena el valor.
+- name;
+- label;
+- type;
+- unit;
+- default value;
+- required vs optional;
+- numeric limits;
+- choices;
+- description;
+- whether it is advanced;
+- the internal attribute that stores the value.
 
-Esto evita tener la misma informacion duplicada en:
+This avoids duplicating the same information in:
 
-- constructores;
-- plantillas GUI;
-- exportadores manuales;
+- constructors;
+- GUI templates;
+- manual exporters;
 - tests;
-- y documentacion informal.
+- informal documentation.
 
-## 6. Factory y registro
+## 6. Factory and registry
 
-La factory vive en `src/hydraulic_solver/factory.py`.
+The factory lives in `src/hydraulic_solver/factory.py`.
 
-Responsabilidades:
+Responsibilities:
 
-- registrar tipos de conexion por nombre;
-- instanciar desde JSON o desde codigo;
-- exportar a JSON;
-- ofrecer schemas y templates de parametros.
+- register connection types by name;
+- instantiate them from JSON or from code;
+- export them to JSON;
+- expose parameter schemas and templates.
 
-Flujo de creacion:
+Creation flow:
 
-1. El JSON o la GUI indican un `type`.
-2. La factory busca ese tipo en el registro.
-3. Si la clase expone `Parameterized`, se validan y normalizan los
-   parametros automaticamente.
-4. Se construye la instancia.
-5. El sistema la inserta en la red junto a sus nodos extremos.
+1. JSON or the GUI provides one `type`.
+2. The factory looks that type up in the registry.
+3. If the class exposes `Parameterized`, parameters are validated and normalized automatically.
+4. The instance is created.
+5. The system inserts it into the network together with its endpoint nodes.
 
-Flujo de exportacion:
+Export flow:
 
-1. La factory identifica el tipo registrado.
-2. Si el objeto es `Parameterized`, exporta sus valores actuales.
-3. Si no lo es, puede usar un serializador manual.
+1. The factory identifies the registered type.
+2. If the object is `Parameterized`, it exports current values.
+3. Otherwise it may use one manual serializer.
 
-## 7. JSON y persistencia
+## 7. JSON and persistence
 
-El formato canónico sigue siendo compatible con `MVP002`:
+The canonical format remains compatible with `MVP002`:
 
 ```json
 {
@@ -209,95 +207,95 @@ El formato canónico sigue siendo compatible con `MVP002`:
 }
 ```
 
-Ademas, `MVP003` acepta `parameters` como alias de entrada para
-conexiones.
+In addition, `MVP003` accepts `parameters` as an input alias for
+connections.
 
-La estrategia seguida es:
+The adopted strategy is:
 
-- compatibilidad razonable al exportar;
-- flexibilidad adicional al importar;
-- menos codigo especifico por modelo.
+- reasonable compatibility when exporting;
+- extra flexibility when importing;
+- less model-specific code.
 
-## 8. Solvers y resultados
+## 8. Solvers and results
 
-Hay dos niveles:
+There are two levels:
 
-1. adaptadores de bajo nivel en `src/hydraulic_solver/solvers/`;
-2. API publica de framework en `hydranet.solvers.solve(...)`.
+1. low-level adapters in `src/hydraulic_solver/solvers/`;
+2. public framework API in `hydranet.solvers.solve(...)`.
 
-El adaptador de bajo nivel sigue pudiendo devolver:
+The low-level adapter may still return:
 
 ```python
 (nodeIds, optimize_result)
 ```
 
-pero la capa publica convierte eso en:
+but the public layer converts that into:
 
 - `SolveResult`;
 - `NodeResult`;
 - `ConnectionResult`.
 
-Con esto la app ya no necesita saber:
+With that, the app no longer needs to know:
 
-- que es `result.x`;
-- que es `result.fun`;
-- o como se reconstruyen residuales y caudales.
+- what `result.x` is;
+- what `result.fun` is;
+- or how residuals and flows are reconstructed.
 
-## 9. Resultados derivados
+## 9. Derived results
 
-`results.py` centraliza la construccion de resultados post-solve.
+`results.py` centralizes post-solve result construction.
 
-Esto evita que:
+This avoids:
 
-- la GUI recalculase flujos;
-- la capa application repitiera formulas;
-- cada consumidor tuviera que reconstruir magnitudes por su cuenta.
+- the GUI recomputing flows;
+- the application layer repeating formulas;
+- each consumer rebuilding quantities independently.
 
-`SolveResult` contiene:
+`SolveResult` contains:
 
-- exito y mensaje;
-- nombre del solver;
-- heads por nodo;
-- flows por conexion;
-- residuales nodales;
-- residual maximo;
-- contadores de iteracion;
-- resultados derivados por nodo y por conexion;
-- y opcionalmente el resultado bruto.
+- success and message;
+- solver name;
+- node heads;
+- connection flows;
+- nodal residuals;
+- maximum residual;
+- iteration counters;
+- derived node and connection results;
+- and optionally the raw result.
 
-## 10. Capa `application`
+## 10. `application` layer
 
-La capa `application` no redefine la fisica.
+The `application` layer does not redefine the physics.
 
-Su trabajo es:
+Its job is to:
 
-- cargar y guardar archivos;
-- editar redes;
-- validar;
-- ejecutar solves o evaluaciones;
-- generar snapshots para GUI.
+- load and save files;
+- edit networks;
+- validate;
+- run solves or current-state evaluations;
+- generate export payloads for the GUI.
 
-Todavia conserva algunos modelos y snapshots heredados de `MVP002`,
-pero en `MVP003` ya se apoya en los resultados derivados del backend
-cuando construye inspecciones y mapas de resultados.
+It still preserves some legacy helpers inherited from `MVP002`, but in
+`MVP003` it already reuses backend-derived results in inspection and
+result mapping.
 
-## 11. Relacion con la GUI
+## 11. Relation to the GUI
 
-La GUI debe consumir:
+The GUI should consume:
 
-- schemas de parametros;
-- templates de parametros;
-- mensajes de validacion;
-- `SolveOutcome` o snapshots de aplicacion;
-- y, cada vez mas, estructuras ya derivadas del backend.
+- parameter schemas;
+- parameter templates;
+- validation messages;
+- `SolveResult`;
+- export-ready result payloads.
 
-La GUI no deberia:
+The GUI should not:
 
-- hardcodear formularios por cada modelo si puede evitarlos;
-- duplicar validaciones genericas;
-- ni depender de clases de SciPy.
+- hardcode forms for every model when avoidable;
+- duplicate generic validations;
+- depend on SciPy classes.
 
-## 12. Archivos clave
+## 12. Key files
 
 - `src/hydraulic_solver/parameters.py`
 - `src/hydraulic_solver/connections.py`
@@ -307,14 +305,14 @@ La GUI no deberia:
 - `src/hydraulic_solver/solvers/api.py`
 - `hydranet/__init__.py`
 
-## 13. Criterio general de diseño
+## 13. Overall design criterion
 
-La arquitectura de `MVP003` intenta maximizar:
+The `MVP003` architecture tries to maximize:
 
-- claridad para un TFG;
-- robustez;
-- extensibilidad pragmatica;
-- y reduccion de duplicacion real.
+- clarity for a thesis project;
+- robustness;
+- pragmatic extensibility;
+- real duplication reduction.
 
-No intenta introducir una arquitectura abstracta compleja ni un sistema
-de plugins sobrediseñado.
+It does not try to introduce a complex abstract architecture or an
+overdesigned plugin system.

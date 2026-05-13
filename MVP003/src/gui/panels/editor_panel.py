@@ -6,15 +6,11 @@ from collections.abc import Callable
 import tkinter as tk
 from tkinter import messagebox, ttk
 
-from src.application import (
-    add_connection,
-    add_node,
-    inspect_connection,
-    remove_connection,
-    remove_node,
-    reverse_connection_orientation,
-    update_connection,
-    update_node,
+from src.application import reverse_connection_orientation
+from src.hydraulic_solver import (
+    Node,
+    create_connection,
+    export_connection_spec,
 )
 
 from ..dialogs import ask_connection_payload, ask_node_payload
@@ -56,7 +52,7 @@ class EditorPanel(ttk.Frame):
         self._build_content()
 
     def _build_summary(self) -> None:
-        summary_frame = ttk.LabelFrame(self, text="Estado de la Red", padding=10)
+        summary_frame = ttk.LabelFrame(self, text="Network state", padding=10)
         summary_frame.grid(row=0, column=0, sticky="ew", pady=(0, 12))
         summary_frame.columnconfigure(0, weight=1)
         self.summaryText = tk.Text(summary_frame, height=7, wrap="word", state="disabled")
@@ -75,24 +71,24 @@ class EditorPanel(ttk.Frame):
         frame.columnconfigure(0, weight=1)
         frame.rowconfigure(1, weight=1)
 
-        ttk.Label(frame, text="Nodos", font=("TkDefaultFont", 11, "bold")).grid(
+        ttk.Label(frame, text="Nodes", font=("TkDefaultFont", 11, "bold")).grid(
             row=0,
             column=0,
             sticky="w",
         )
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=0, column=1, sticky="e")
-        ttk.Button(button_frame, text="Anadir", command=self._handle_add_node).grid(
+        ttk.Button(button_frame, text="Add", command=self._handle_add_node).grid(
             row=0,
             column=0,
             padx=(0, 4),
         )
-        ttk.Button(button_frame, text="Editar", command=self._handle_edit_node).grid(
+        ttk.Button(button_frame, text="Edit", command=self._handle_edit_node).grid(
             row=0,
             column=1,
             padx=(0, 4),
         )
-        ttk.Button(button_frame, text="Borrar", command=self._handle_remove_node).grid(
+        ttk.Button(button_frame, text="Remove", command=self._handle_remove_node).grid(
             row=0,
             column=2,
         )
@@ -108,13 +104,13 @@ class EditorPanel(ttk.Frame):
         self.nodeTree.heading("#0", text="Node ID")
         self.nodeTree.column("#0", width=110, anchor="w")
         self.nodeTree.heading("head", text="Head")
-        self.nodeTree.heading("elevation", text="Elev.")
+        self.nodeTree.heading("elevation", text="Elevation")
         self.nodeTree.heading("external", text="Qext")
         self.nodeTree.heading("boundary", text="Boundary")
         self.nodeTree.column("head", width=80, anchor="center")
-        self.nodeTree.column("elevation", width=70, anchor="center")
-        self.nodeTree.column("external", width=70, anchor="center")
-        self.nodeTree.column("boundary", width=70, anchor="center")
+        self.nodeTree.column("elevation", width=90, anchor="center")
+        self.nodeTree.column("external", width=80, anchor="center")
+        self.nodeTree.column("boundary", width=80, anchor="center")
         self.nodeTree.bind("<<TreeviewSelect>>", self._handle_node_selection)
         return frame
 
@@ -125,34 +121,34 @@ class EditorPanel(ttk.Frame):
 
         ttk.Label(
             frame,
-            text="Conexiones",
+            text="Connections",
             font=("TkDefaultFont", 11, "bold"),
         ).grid(row=0, column=0, sticky="w")
         button_frame = ttk.Frame(frame)
         button_frame.grid(row=0, column=1, sticky="e")
         ttk.Button(
             button_frame,
-            text="Anadir",
+            text="Add",
             command=self._handle_add_connection,
         ).grid(row=0, column=0, padx=(0, 4))
         ttk.Button(
             button_frame,
-            text="Editar",
+            text="Edit",
             command=self._handle_edit_connection,
         ).grid(row=0, column=1, padx=(0, 4))
         ttk.Button(
             button_frame,
-            text="Borrar",
+            text="Remove",
             command=self._handle_remove_connection,
         ).grid(row=0, column=2, padx=(0, 4))
         ttk.Button(
             button_frame,
-            text="Invertir",
+            text="Reverse",
             command=self._handle_reverse_connection,
         ).grid(row=0, column=3, padx=(0, 4))
         ttk.Button(
             button_frame,
-            text="Enviar a Modelos",
+            text="Send to model viewer",
             command=self._handle_send_to_model_visualizer,
         ).grid(row=0, column=4)
 
@@ -216,13 +212,12 @@ class EditorPanel(ttk.Frame):
         self._set_text(self.formatsText, build_data_format_reference())
 
         inspector_notebook.add(selection_frame, text="Inspector")
-        inspector_notebook.add(spec_frame, text="Network Spec")
-        inspector_notebook.add(formats_frame, text="Formatos")
+        inspector_notebook.add(spec_frame, text="Network JSON")
+        inspector_notebook.add(formats_frame, text="Formats")
         return frame
 
     def _handle_node_selection(self, _event: object) -> None:
         selection = self.nodeTree.selection()
-
         if not selection:
             return
 
@@ -234,7 +229,6 @@ class EditorPanel(ttk.Frame):
 
     def _handle_connection_selection(self, _event: object) -> None:
         selection = self.connectionTree.selection()
-
         if not selection:
             return
 
@@ -248,217 +242,197 @@ class EditorPanel(ttk.Frame):
         )
 
     def _handle_add_node(self) -> None:
-        payload = ask_node_payload(self, title="Anadir Nodo")
-
+        payload = ask_node_payload(self, title="Add node")
         if payload is None:
             return
 
         try:
-            add_node(
-                self._state.system,
-                str(payload["node_id"]),
-                piezometric_head=float(payload["piezometric_head"]),
-                elevation=float(payload["elevation"]),
-                external_flow=float(payload["external_flow"]),
-                is_boundary=bool(payload["is_boundary"]),
-            )
+            node = Node(**dict(payload["parameters"]))
+            self._state.system.addNode(str(payload["node_id"]), node)
         except Exception as exc:
-            messagebox.showerror("Add Node Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo anadir el nodo: {exc}")
+            messagebox.showerror("Add node failed", str(exc), parent=self)
+            self._on_status(f"Could not add the node: {exc}")
             return
 
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Nodo {payload['node_id']} anadido")
+        self._on_status(f"Node {payload['node_id']} added")
 
     def _handle_edit_node(self) -> None:
         node_id = self._state.selected_node_id
-
         if not node_id:
-            messagebox.showinfo("Edit Node", "Selecciona primero un nodo.", parent=self)
+            messagebox.showinfo("Edit node", "Select one node first.", parent=self)
             return
 
         node = self._state.system.getNode(node_id)
         payload = ask_node_payload(
             self,
-            title=f"Editar Nodo {node_id}",
+            title=f"Edit node {node_id}",
             node_id=node_id,
-            piezometric_head=node.getPiezometricHead(),
-            elevation=node.getElevation(),
-            external_flow=node.getExternalFlow(),
-            is_boundary=node.isBoundary(),
+            parameter_values=node.get_parameter_values(),
             allow_id_edit=False,
         )
-
         if payload is None:
             return
 
         try:
-            update_node(
-                self._state.system,
-                node_id,
-                piezometric_head=float(payload["piezometric_head"]),
-                elevation=float(payload["elevation"]),
-                external_flow=float(payload["external_flow"]),
-                is_boundary=bool(payload["is_boundary"]),
-            )
+            node.update_parameters(**dict(payload["parameters"]))
         except Exception as exc:
-            messagebox.showerror("Edit Node Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo editar el nodo: {exc}")
+            messagebox.showerror("Edit node failed", str(exc), parent=self)
+            self._on_status(f"Could not edit the node: {exc}")
             return
 
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Nodo {node_id} actualizado")
+        self._on_status(f"Node {node_id} updated")
 
     def _handle_remove_node(self) -> None:
         node_id = self._state.selected_node_id
-
         if not node_id:
-            messagebox.showinfo("Delete Node", "Selecciona primero un nodo.", parent=self)
+            messagebox.showinfo("Remove node", "Select one node first.", parent=self)
             return
 
         try:
-            remove_node(self._state.system, node_id)
+            self._state.system.removeNode(node_id)
         except ValueError as exc:
             should_remove = messagebox.askyesno(
-                "Remove Incident Connections?",
-                f"{exc}\n\nQuieres borrar tambien sus conexiones incidentes?",
+                "Remove incident connections?",
+                f"{exc}\n\nDo you also want to remove the incident connections?",
                 parent=self,
             )
-
             if not should_remove:
                 return
 
             try:
-                remove_node(
-                    self._state.system,
-                    node_id,
-                    remove_incident_connections=True,
-                )
+                self._state.system.removeNode(node_id, removeIncidentConnections=True)
             except Exception as nested_exc:
-                messagebox.showerror("Delete Node Failed", str(nested_exc), parent=self)
-                self._on_status(f"No se pudo borrar el nodo: {nested_exc}")
+                messagebox.showerror("Remove node failed", str(nested_exc), parent=self)
+                self._on_status(f"Could not remove the node: {nested_exc}")
                 return
         except Exception as exc:
-            messagebox.showerror("Delete Node Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo borrar el nodo: {exc}")
+            messagebox.showerror("Remove node failed", str(exc), parent=self)
+            self._on_status(f"Could not remove the node: {exc}")
             return
 
         self._state.selected_node_id = None
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Nodo {node_id} borrado")
+        self._on_status(f"Node {node_id} removed")
 
     def _handle_add_connection(self) -> None:
         node_ids = tuple(sorted(self._state.system.nodes))
-
         if len(node_ids) < 2:
             messagebox.showinfo(
-                "Add Connection",
-                "La red necesita al menos dos nodos antes de anadir una conexion.",
+                "Add connection",
+                "The network needs at least two nodes before adding a connection.",
                 parent=self,
             )
             return
 
         payload = ask_connection_payload(
             self,
-            title="Anadir Conexion",
+            title="Add connection",
             node_ids=node_ids,
             node1_id=node_ids[0],
             node2_id=node_ids[1],
         )
-
         if payload is None:
             return
 
         try:
-            add_connection(
-                self._state.system,
-                str(payload["connection_id"]),
+            connection = create_connection(
                 str(payload["connection_type"]),
+                **dict(payload["parameters"]),
+            )
+            self._state.system.addConnection(
+                str(payload["connection_id"]),
+                connection,
                 str(payload["node1_id"]),
                 str(payload["node2_id"]),
-                params=dict(payload["params"]),
             )
         except Exception as exc:
-            messagebox.showerror("Add Connection Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo anadir la conexion: {exc}")
+            messagebox.showerror("Add connection failed", str(exc), parent=self)
+            self._on_status(f"Could not add the connection: {exc}")
             return
 
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Conexion {payload['connection_id']} anadida")
+        self._on_status(f"Connection {payload['connection_id']} added")
 
     def _handle_edit_connection(self) -> None:
         connection_id = self._state.selected_connection_id
-
         if not connection_id:
             messagebox.showinfo(
-                "Edit Connection",
-                "Selecciona primero una conexion.",
+                "Edit connection",
+                "Select one connection first.",
                 parent=self,
             )
             return
 
-        connection_details = inspect_connection(self._state.system, connection_id)
+        connection_entry = self._state.system.getConnectionEntry(connection_id)
+        connection_spec = export_connection_spec(connection_entry.connection)
         payload = ask_connection_payload(
             self,
-            title=f"Editar Conexion {connection_id}",
+            title=f"Edit connection {connection_id}",
             node_ids=tuple(sorted(self._state.system.nodes)),
             connection_id=connection_id,
-            connection_type=connection_details.connection_type,
-            node1_id=connection_details.node1_id,
-            node2_id=connection_details.node2_id,
-            params=connection_details.parameters,
+            connection_type=str(connection_spec["type"]),
+            node1_id=connection_entry.node1Id,
+            node2_id=connection_entry.node2Id,
+            parameter_values=dict(connection_spec["params"]),
             allow_id_edit=False,
         )
-
         if payload is None:
             return
 
         try:
-            update_connection(
-                self._state.system,
+            new_connection = create_connection(
+                str(payload["connection_type"]),
+                **dict(payload["parameters"]),
+            )
+            self._state.system.replaceConnection(
                 connection_id,
-                connection_type=str(payload["connection_type"]),
-                params=dict(payload["params"]),
-                node1_id=str(payload["node1_id"]),
-                node2_id=str(payload["node2_id"]),
+                new_connection,
+                str(payload["node1_id"]),
+                str(payload["node2_id"]),
             )
         except Exception as exc:
-            messagebox.showerror("Edit Connection Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo editar la conexion: {exc}")
+            messagebox.showerror("Edit connection failed", str(exc), parent=self)
+            self._on_status(f"Could not edit the connection: {exc}")
             return
 
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Conexion {connection_id} actualizada")
+        self._on_status(f"Connection {connection_id} updated")
 
     def _handle_remove_connection(self) -> None:
         connection_id = self._state.selected_connection_id
-
         if not connection_id:
             messagebox.showinfo(
-                "Delete Connection",
-                "Selecciona primero una conexion.",
+                "Remove connection",
+                "Select one connection first.",
                 parent=self,
             )
             return
 
         try:
-            remove_connection(self._state.system, connection_id)
+            self._state.system.removeConnection(connection_id)
         except Exception as exc:
-            messagebox.showerror("Delete Connection Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo borrar la conexion: {exc}")
+            messagebox.showerror("Remove connection failed", str(exc), parent=self)
+            self._on_status(f"Could not remove the connection: {exc}")
             return
 
         self._state.selected_connection_id = None
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Conexion {connection_id} borrada")
+        self._on_status(f"Connection {connection_id} removed")
 
     def _handle_reverse_connection(self) -> None:
         connection_id = self._state.selected_connection_id
-
         if not connection_id:
             messagebox.showinfo(
-                "Reverse Connection",
-                "Selecciona primero una conexion.",
+                "Reverse connection",
+                "Select one connection first.",
                 parent=self,
             )
             return
@@ -466,20 +440,20 @@ class EditorPanel(ttk.Frame):
         try:
             reverse_connection_orientation(self._state.system, connection_id)
         except Exception as exc:
-            messagebox.showerror("Reverse Connection Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo invertir la conexion: {exc}")
+            messagebox.showerror("Reverse connection failed", str(exc), parent=self)
+            self._on_status(f"Could not reverse the connection: {exc}")
             return
 
+        self._state.mark_dirty()
         self._on_state_changed()
-        self._on_status(f"Orientacion de {connection_id} invertida")
+        self._on_status(f"Connection {connection_id} orientation reversed")
 
     def _handle_send_to_model_visualizer(self) -> None:
         connection_id = self._state.selected_connection_id
-
         if not connection_id:
             messagebox.showinfo(
-                "Send To Model Visualizer",
-                "Selecciona primero una conexion.",
+                "Send to model viewer",
+                "Select one connection first.",
                 parent=self,
             )
             return
@@ -553,5 +527,5 @@ class EditorPanel(ttk.Frame):
             self._state.selected_connection_id = None
             self._set_text(
                 self.selectionText,
-                "Selecciona un nodo o una conexion para inspeccionar sus datos.",
+                "Select one node or one connection to inspect its data.",
             )

@@ -1,45 +1,46 @@
 # `src/hydraulic_solver/solvers`
 
-Esta carpeta contiene la orquestacion numerica del solve estacionario.
+This folder contains the numerical orchestration for the steady-state
+solve.
 
-## Dos niveles de API
+## Two API levels
 
-1. Bajo nivel:
+1. Low level:
    - `solve_steady_state_with_root(...)`
    - `solve_steady_state_with_scipy(...)`
-2. API publica de framework:
+2. Public framework API:
    - `solve(...)`
 
-La API publica recomendada es:
+The recommended public API is:
 
 ```python
 from hydranet.solvers import solve
 ```
 
-Los helpers de bajo nivel siguen siendo utiles para:
+The low-level helpers remain useful for:
 
-- experimentacion;
-- comparacion con SciPy;
-- tests mas cercanos al adaptador numerico.
+- experimentation;
+- comparison against SciPy;
+- tests closer to the numerical adapter.
 
-## Flujo interno comun
+## Common internal flow
 
-1. Elegir el orden de nodos desconocidos.
-2. Construir el vector inicial.
-3. Convertir cada vector de prueba en `headOverrides`.
-4. Pedir a `HydraulicSystem` el vector residual.
-5. Ejecutar el algoritmo no lineal.
-6. Reconstruir heads y resultados derivados.
+1. Choose the unknown-node ordering.
+2. Build the initial vector.
+3. Convert each trial vector into `headOverrides`.
+4. Ask `HydraulicSystem` for the residual vector.
+5. Run the nonlinear algorithm.
+6. Rebuild heads and derived results.
 
-## Consideraciones numericas
+## Numerical notes
 
-- El solve actual es denso.
-- El backend sigue usando `scipy.optimize.root`.
-- `problemScale` se conserva como heuristica para continuation futura.
-- `solve(...)` envuelve el resultado crudo en un `SolveResult`.
+- The current solve path is dense.
+- The backend still uses `scipy.optimize.root`.
+- `problemScale` is kept as a heuristic for future continuation.
+- `solve(...)` wraps the raw result in a `SolveResult`.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Fundamentos fisicos y matematicos](../../../docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](../../../docs/arquitectura_e_implementacion.md)
-- [Guia de extension](../../../docs/guia_de_extension.md)
+- [Physical and mathematical foundations](../../../docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](../../../docs/arquitectura_e_implementacion.md)
+- [Extension guide](../../../docs/guia_de_extension.md)

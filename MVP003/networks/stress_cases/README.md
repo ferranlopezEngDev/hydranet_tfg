@@ -1,54 +1,53 @@
 # `networks/stress_cases`
 
-Esta carpeta contiene familias de casos sinteticos para medir el
-comportamiento del framework sin versionar datasets pesados.
+This folder contains families of synthetic cases used to measure
+framework behavior without versioning heavy datasets.
 
-Los ficheros JSON se generan bajo demanda y no se mantienen en Git.
+JSON files are generated on demand and are not kept in Git.
 
-## Familias
+## Families
 
 - `stress_connections_<N>.json`
-  Dos nodos frontera unidos por `N` conexiones en paralelo.
+  Two boundary nodes connected by `N` parallel connections.
 - `stress_nodes_<N>.json`
-  Cadena conectada con `N` nodos frontera y `N-1` conexiones.
+  One connected chain with `N` boundary nodes and `N-1` connections.
 - `solver_stress_connections_<N>.json`
-  Un solo nodo desconocido y muchas conexiones en paralelo.
+  One unknown node and many parallel connections.
 - `solver_stress_nodes_<N>.json`
-  Un solo nodo desconocido y muchas fuentes frontera en estrella.
+  One unknown node and many boundary sources in a star.
 - `solver_stress_unknown_heads_<N>.json`
-  Cadena con `N` nodos internos desconocidos entre dos fronteras.
+  One chain with `N` internal unknown nodes between two boundaries.
 
-## Para que sirve cada familia
+## What each family is for
 
 - `stress_*`
-  sirve para carga, parseo, validacion y evaluacion de estado actual.
+  useful for loading, parsing, validation, and current-state evaluation.
 - `solver_stress_connections_*`
-  estresa el coste por residual manteniendo una sola incognita.
+  stresses residual cost while keeping one unknown.
 - `solver_stress_nodes_*`
-  estresa el tamaño topologico total manteniendo una sola incognita.
+  stresses topological size while keeping one unknown.
 - `solver_stress_unknown_heads_*`
-  es la familia que realmente escala la dimension del solve denso.
+  is the family that truly scales the dimension of the dense solve.
 
-## Generacion
+## Generation
 
 ```bash
 python networks/stress_cases/generate_stress_cases.py
 ```
 
-O desde la interfaz de benchmarks:
+Or from the benchmark interface:
 
 ```bash
 python benchmarks/generate_synthetic_networks.py solver_unknown_heads 10
 ```
 
-## Notas
+## Notes
 
-- La familia de muchas incognitas se limita a tamaños moderados porque el
-  solve actual sigue siendo denso.
-- Los tests de stress de `MVP003` regeneran automaticamente los casos
-  pequeños que necesitan.
+- The many-unknown-head family is kept at moderate sizes because the
+  current solve path is still dense.
+- `MVP003` stress tests automatically regenerate the small cases they need.
 
-## Documentacion relacionada
+## Related documentation
 
 - [benchmarks/README.md](../../benchmarks/README.md)
-- [Arquitectura e implementacion](../../docs/arquitectura_e_implementacion.md)
+- [Architecture and implementation](../../docs/arquitectura_e_implementacion.md)

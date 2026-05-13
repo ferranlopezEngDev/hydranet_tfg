@@ -1,31 +1,32 @@
 # `benchmarks`
 
-Esta carpeta contiene benchmarks reproducibles y ligeros para `MVP003`.
+This folder contains lightweight and reproducible benchmarks for
+`MVP003`.
 
-## Objetivo
+## Goal
 
-Medir de forma separada:
+Measure separately:
 
-- tiempo de carga JSON;
-- tiempo de validacion;
-- tiempo de ensamblaje de residuales;
-- tiempo de solver;
-- tamano del problema y contadores de convergencia.
+- JSON load time;
+- validation time;
+- residual-assembly time;
+- solver time;
+- problem size and convergence counters.
 
-## Filosofia
+## Philosophy
 
-- no versionar JSON gigantes;
-- generar casos sinteticos a partir de scripts;
-- mantener comandos simples y repetibles;
-- producir salida JSON facil de guardar o comparar.
+- do not version giant JSON files;
+- generate synthetic cases from scripts;
+- keep commands simple and repeatable;
+- produce JSON output that is easy to save or compare.
 
-## Generar un caso sintetico
+## Generate one synthetic case
 
 ```bash
 python benchmarks/generate_synthetic_networks.py solver_unknown_heads 10
 ```
 
-## Benchmarks disponibles
+## Available benchmarks
 
 ```bash
 python benchmarks/benchmark_load.py networks/stress_cases/solver_stress_unknown_heads_10.json
@@ -34,9 +35,10 @@ python benchmarks/benchmark_residuals.py networks/stress_cases/solver_stress_unk
 python benchmarks/benchmark_solver.py networks/stress_cases/solver_stress_unknown_heads_10.json
 ```
 
-## Relacion con la documentacion principal
+## Relation to the main documentation
 
-Para entender que mide cada caso y que limita al solver actual, ver:
+To understand what each case measures and what limits the current
+solver, see:
 
-- [Fundamentos fisicos y matematicos](../docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](../docs/arquitectura_e_implementacion.md)
+- [Physical and mathematical foundations](../docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](../docs/arquitectura_e_implementacion.md)

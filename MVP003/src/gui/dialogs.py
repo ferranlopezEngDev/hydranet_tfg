@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import tkinter as tk
-from tkinter import messagebox, scrolledtext, simpledialog, ttk
+from tkinter import messagebox, simpledialog, ttk
 
-from .workflows import (
-    format_json,
+from src.hydraulic_solver import (
+    Node,
+    create_connection,
+    get_connection_parameter_schema,
     get_connection_parameter_template,
-    list_registered_connection_types,
-    parse_json_mapping,
+    list_connection_types,
 )
+
+from .dynamic_form import DynamicForm
 
 
 class NodeDialog(simpledialog.Dialog):
@@ -22,95 +26,55 @@ class NodeDialog(simpledialog.Dialog):
         *,
         title: str,
         node_id: str = "",
-        piezometric_head: float = 0.0,
-        elevation: float = 0.0,
-        external_flow: float = 0.0,
-        is_boundary: bool = False,
+        parameter_values: Mapping[str, object] | None = None,
         allow_id_edit: bool = True,
     ) -> None:
         self._initial_node_id = node_id
-        self._initial_piezometric_head = piezometric_head
-        self._initial_elevation = elevation
-        self._initial_external_flow = external_flow
-        self._initial_is_boundary = is_boundary
+        self._initial_parameter_values = dict(
+            parameter_values or Node.build_parameter_template()
+        )
         self._allow_id_edit = allow_id_edit
         self.result: dict[str, object] | None = None
         super().__init__(parent, title=title)
 
     def body(self, master: tk.Misc) -> tk.Widget:
+        master.columnconfigure(1, weight=1)
+
         ttk.Label(master, text="Node ID").grid(row=0, column=0, sticky="w", pady=4)
-        ttk.Label(master, text="Piezometric Head").grid(
-            row=1,
-            column=0,
-            sticky="w",
-            pady=4,
-        )
-        ttk.Label(master, text="Elevation").grid(row=2, column=0, sticky="w", pady=4)
-        ttk.Label(master, text="External Flow").grid(
-            row=3,
-            column=0,
-            sticky="w",
-            pady=4,
-        )
-
-        self.nodeIdVar = tk.StringVar(value=self._initial_node_id)
-        self.piezometricHeadVar = tk.StringVar(
-            value=f"{float(self._initial_piezometric_head):.12g}"
-        )
-        self.elevationVar = tk.StringVar(value=f"{float(self._initial_elevation):.12g}")
-        self.externalFlowVar = tk.StringVar(
-            value=f"{float(self._initial_external_flow):.12g}"
-        )
-        self.isBoundaryVar = tk.BooleanVar(value=bool(self._initial_is_boundary))
-
-        nodeIdEntry = ttk.Entry(master, textvariable=self.nodeIdVar, width=28)
-        nodeIdEntry.grid(row=0, column=1, sticky="ew", pady=4)
+        self.node_id_var = tk.StringVar(value=self._initial_node_id)
+        node_id_entry = ttk.Entry(master, textvariable=self.node_id_var, width=28)
+        node_id_entry.grid(row=0, column=1, sticky="ew", pady=4)
 
         if not self._allow_id_edit:
-            nodeIdEntry.state(["disabled"])
+            node_id_entry.state(["disabled"])
 
-        ttk.Entry(master, textvariable=self.piezometricHeadVar, width=28).grid(
-            row=1,
-            column=1,
-            sticky="ew",
-            pady=4,
+        parameters_frame = ttk.LabelFrame(master, text="Node parameters", padding=8)
+        parameters_frame.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
+        parameters_frame.columnconfigure(0, weight=1)
+
+        self.form = DynamicForm(
+            parameters_frame,
+            Node.get_parameter_schema(),
+            self._initial_parameter_values,
         )
-        ttk.Entry(master, textvariable=self.elevationVar, width=28).grid(
-            row=2,
-            column=1,
-            sticky="ew",
-            pady=4,
-        )
-        ttk.Entry(master, textvariable=self.externalFlowVar, width=28).grid(
-            row=3,
-            column=1,
-            sticky="ew",
-            pady=4,
-        )
-        ttk.Checkbutton(
-            master,
-            text="Boundary node",
-            variable=self.isBoundaryVar,
-        ).grid(row=4, column=1, sticky="w", pady=6)
-        master.columnconfigure(1, weight=1)
-        return nodeIdEntry
+        self.form.grid(row=0, column=0, sticky="nsew")
+        return node_id_entry
 
     def validate(self) -> bool:
         try:
-            node_id = self.nodeIdVar.get().strip()
-
+            node_id = self.node_id_var.get().strip()
             if not node_id:
                 raise ValueError("Node ID must be non-empty")
 
+            parameters = self.form.validate()
+            Node(**parameters)
             self.result = {
                 "node_id": node_id,
-                "piezometric_head": float(self.piezometricHeadVar.get().strip()),
-                "elevation": float(self.elevationVar.get().strip()),
-                "external_flow": float(self.externalFlowVar.get().strip()),
-                "is_boundary": bool(self.isBoundaryVar.get()),
+                "parameters": parameters,
             }
         except Exception as exc:
-            messagebox.showerror("Invalid Node", str(exc), parent=self)
+            self.form.show_errors(exc)
+            messagebox.showerror("Invalid node", str(exc), parent=self)
             return False
 
         return True
@@ -129,7 +93,7 @@ class ConnectionDialog(simpledialog.Dialog):
         connection_type: str = "fixed_kqn_pipe",
         node1_id: str = "",
         node2_id: str = "",
-        params: dict[str, object] | None = None,
+        parameter_values: Mapping[str, object] | None = None,
         allow_id_edit: bool = True,
     ) -> None:
         self._node_ids = node_ids
@@ -137,128 +101,163 @@ class ConnectionDialog(simpledialog.Dialog):
         self._initial_connection_type = connection_type
         self._initial_node1_id = node1_id
         self._initial_node2_id = node2_id
-        self._initial_params = params or get_connection_parameter_template(
-            connection_type
+        self._initial_parameter_values = dict(
+            parameter_values
+            or get_connection_parameter_template(connection_type)
         )
         self._allow_id_edit = allow_id_edit
         self.result: dict[str, object] | None = None
+        self.form: DynamicForm | None = None
         super().__init__(parent, title=title)
 
     def body(self, master: tk.Misc) -> tk.Widget:
+        master.columnconfigure(1, weight=1)
+
         ttk.Label(master, text="Connection ID").grid(
             row=0,
             column=0,
             sticky="w",
             pady=4,
         )
-        ttk.Label(master, text="Type").grid(row=1, column=0, sticky="w", pady=4)
-        ttk.Label(master, text="Node 1").grid(row=2, column=0, sticky="w", pady=4)
-        ttk.Label(master, text="Node 2").grid(row=3, column=0, sticky="w", pady=4)
-        ttk.Label(master, text="Params JSON").grid(
-            row=4,
+        ttk.Label(master, text="Connection type").grid(
+            row=1,
             column=0,
-            sticky="nw",
+            sticky="w",
             pady=4,
         )
+        ttk.Label(master, text="Node 1").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(master, text="Node 2").grid(row=3, column=0, sticky="w", pady=4)
 
-        self.connectionIdVar = tk.StringVar(value=self._initial_connection_id)
-        self.connectionTypeVar = tk.StringVar(value=self._initial_connection_type)
-        self.node1IdVar = tk.StringVar(value=self._initial_node1_id)
-        self.node2IdVar = tk.StringVar(value=self._initial_node2_id)
+        self.connection_id_var = tk.StringVar(value=self._initial_connection_id)
+        self.connection_type_var = tk.StringVar(value=self._initial_connection_type)
+        self.node1_id_var = tk.StringVar(value=self._initial_node1_id)
+        self.node2_id_var = tk.StringVar(value=self._initial_node2_id)
 
-        connectionIdEntry = ttk.Entry(master, textvariable=self.connectionIdVar, width=32)
-        connectionIdEntry.grid(row=0, column=1, sticky="ew", pady=4)
+        connection_id_entry = ttk.Entry(
+            master,
+            textvariable=self.connection_id_var,
+            width=32,
+        )
+        connection_id_entry.grid(row=0, column=1, sticky="ew", pady=4)
 
         if not self._allow_id_edit:
-            connectionIdEntry.state(["disabled"])
+            connection_id_entry.state(["disabled"])
 
-        self.connectionTypeCombo = ttk.Combobox(
+        self.connection_type_combo = ttk.Combobox(
             master,
-            textvariable=self.connectionTypeVar,
-            values=list_registered_connection_types(),
+            textvariable=self.connection_type_var,
+            values=list_connection_types(),
             state="readonly",
             width=28,
         )
-        self.connectionTypeCombo.grid(row=1, column=1, sticky="ew", pady=4)
-        self.connectionTypeCombo.bind("<<ComboboxSelected>>", self._handle_type_changed)
+        self.connection_type_combo.grid(row=1, column=1, sticky="ew", pady=4)
+        self.connection_type_combo.bind(
+            "<<ComboboxSelected>>",
+            self._handle_type_changed,
+        )
 
-        self.node1Combo = ttk.Combobox(
+        self.node1_combo = ttk.Combobox(
             master,
-            textvariable=self.node1IdVar,
+            textvariable=self.node1_id_var,
             values=self._node_ids,
             state="readonly",
             width=28,
         )
-        self.node1Combo.grid(row=2, column=1, sticky="ew", pady=4)
+        self.node1_combo.grid(row=2, column=1, sticky="ew", pady=4)
 
-        self.node2Combo = ttk.Combobox(
+        self.node2_combo = ttk.Combobox(
             master,
-            textvariable=self.node2IdVar,
+            textvariable=self.node2_id_var,
             values=self._node_ids,
             state="readonly",
             width=28,
         )
-        self.node2Combo.grid(row=3, column=1, sticky="ew", pady=4)
+        self.node2_combo.grid(row=3, column=1, sticky="ew", pady=4)
 
-        buttonFrame = ttk.Frame(master)
-        buttonFrame.grid(row=4, column=1, sticky="ew")
-        buttonFrame.columnconfigure(0, weight=1)
+        parameters_frame = ttk.LabelFrame(
+            master,
+            text="Connection parameters",
+            padding=8,
+        )
+        parameters_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=(8, 0))
+        parameters_frame.columnconfigure(0, weight=1)
+
+        toolbar = ttk.Frame(parameters_frame)
+        toolbar.grid(row=0, column=0, sticky="ew", pady=(0, 8))
         ttk.Button(
-            buttonFrame,
-            text="Load Type Template",
-            command=self._load_template_for_current_type,
-        ).grid(row=0, column=0, sticky="w", pady=(0, 4))
+            toolbar,
+            text="Load default values",
+            command=self._load_defaults_for_current_type,
+        ).grid(row=0, column=0, sticky="w")
 
-        self.paramsText = scrolledtext.ScrolledText(master, width=52, height=14)
-        self.paramsText.grid(row=5, column=0, columnspan=2, sticky="nsew")
-        self.paramsText.insert("1.0", format_json(self._initial_params))
+        self.form_container = ttk.Frame(parameters_frame)
+        self.form_container.grid(row=1, column=0, sticky="nsew")
+        self.form_container.columnconfigure(0, weight=1)
+        parameters_frame.rowconfigure(1, weight=1)
 
-        master.columnconfigure(1, weight=1)
-        master.rowconfigure(5, weight=1)
-        return connectionIdEntry
+        self._rebuild_form(self._initial_parameter_values)
+        return connection_id_entry
 
     def validate(self) -> bool:
         try:
-            connection_id = self.connectionIdVar.get().strip()
-            node1_id = self.node1IdVar.get().strip()
-            node2_id = self.node2IdVar.get().strip()
+            connection_id = self.connection_id_var.get().strip()
+            node1_id = self.node1_id_var.get().strip()
+            node2_id = self.node2_id_var.get().strip()
+            connection_type = self.connection_type_var.get().strip()
 
             if not connection_id:
                 raise ValueError("Connection ID must be non-empty")
-
             if not node1_id or not node2_id:
                 raise ValueError("Both endpoint node IDs are required")
-
             if node1_id == node2_id:
                 raise ValueError("A connection cannot connect a node to itself")
+            if self.form is None:
+                raise ValueError("The parameter form could not be created")
 
+            parameters = self.form.validate()
+            create_connection(connection_type, **parameters)
             self.result = {
                 "connection_id": connection_id,
-                "connection_type": self.connectionTypeVar.get().strip(),
+                "connection_type": connection_type,
                 "node1_id": node1_id,
                 "node2_id": node2_id,
-                "params": parse_json_mapping(self.paramsText.get("1.0", tk.END)),
+                "parameters": parameters,
             }
         except Exception as exc:
-            messagebox.showerror("Invalid Connection", str(exc), parent=self)
+            if self.form is not None:
+                self.form.show_errors(exc)
+            messagebox.showerror("Invalid connection", str(exc), parent=self)
             return False
 
         return True
 
     def _handle_type_changed(self, _event: object) -> None:
-        """Offer a fresh template when the selected type changes."""
-        current_text = self.paramsText.get("1.0", tk.END).strip()
+        """Rebuild the form when the selected type changes."""
+        self._rebuild_form(
+            get_connection_parameter_template(
+                self.connection_type_var.get().strip()
+            )
+        )
 
-        if current_text:
-            return
+    def _load_defaults_for_current_type(self) -> None:
+        """Replace the form values with the current type defaults."""
+        self._rebuild_form(
+            get_connection_parameter_template(
+                self.connection_type_var.get().strip()
+            )
+        )
 
-        self._load_template_for_current_type()
+    def _rebuild_form(self, parameter_values: Mapping[str, object] | None) -> None:
+        """Recreate the connection parameter form for the selected type."""
+        for child in self.form_container.winfo_children():
+            child.destroy()
 
-    def _load_template_for_current_type(self) -> None:
-        """Replace the params editor with the default template for the type."""
-        params = get_connection_parameter_template(self.connectionTypeVar.get().strip())
-        self.paramsText.delete("1.0", tk.END)
-        self.paramsText.insert("1.0", format_json(params))
+        self.form = DynamicForm(
+            self.form_container,
+            get_connection_parameter_schema(self.connection_type_var.get().strip()),
+            parameter_values,
+        )
+        self.form.grid(row=0, column=0, sticky="nsew")
 
 
 def ask_node_payload(
@@ -266,10 +265,7 @@ def ask_node_payload(
     *,
     title: str,
     node_id: str = "",
-    piezometric_head: float = 0.0,
-    elevation: float = 0.0,
-    external_flow: float = 0.0,
-    is_boundary: bool = False,
+    parameter_values: Mapping[str, object] | None = None,
     allow_id_edit: bool = True,
 ) -> dict[str, object] | None:
     """Show the node dialog and return its validated payload."""
@@ -277,10 +273,7 @@ def ask_node_payload(
         parent,
         title=title,
         node_id=node_id,
-        piezometric_head=piezometric_head,
-        elevation=elevation,
-        external_flow=external_flow,
-        is_boundary=is_boundary,
+        parameter_values=parameter_values,
         allow_id_edit=allow_id_edit,
     )
     return dialog.result
@@ -295,7 +288,7 @@ def ask_connection_payload(
     connection_type: str = "fixed_kqn_pipe",
     node1_id: str = "",
     node2_id: str = "",
-    params: dict[str, object] | None = None,
+    parameter_values: Mapping[str, object] | None = None,
     allow_id_edit: bool = True,
 ) -> dict[str, object] | None:
     """Show the connection dialog and return its validated payload."""
@@ -307,7 +300,7 @@ def ask_connection_payload(
         connection_type=connection_type,
         node1_id=node1_id,
         node2_id=node2_id,
-        params=params,
+        parameter_values=parameter_values,
         allow_id_edit=allow_id_edit,
     )
     return dialog.result

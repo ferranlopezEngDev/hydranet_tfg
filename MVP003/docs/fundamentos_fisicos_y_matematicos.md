@@ -1,293 +1,284 @@
-# Fundamentos fisicos y matematicos
+# Physical and Mathematical Foundations
 
-Este documento explica la base conceptual del backend de Hydranet en
+This document explains the conceptual basis of the Hydranet backend in
 `MVP003`.
 
-## 1. Alcance fisico del MVP
+## 1. Physical scope of the MVP
 
-`MVP003` resuelve problemas hidraulicos de regimen estacionario sobre
-redes discretizadas en nodos y conexiones.
+`MVP003` solves steady-state hydraulic problems on discrete networks
+made of nodes and connections.
 
-Hipotesis practicas del backend actual:
+Practical assumptions of the current backend:
 
-- formulacion estacionaria, sin transitorio;
-- una magnitud escalar de estado por nodo: la altura piezometrica `H`;
-- cada conexion relaciona las alturas de sus dos extremos con un caudal
-  `Q`;
-- el balance se impone en los nodos no frontera;
-- la capa GUI no implementa fisica: solo consume estructuras del backend.
+- steady-state formulation, no transient behavior;
+- one scalar state variable per node: piezometric head `H`;
+- each connection relates the heads at its two ends to a flow rate `Q`;
+- continuity is imposed at non-boundary nodes;
+- the GUI layer does not implement physics: it only consumes backend structures.
 
-No se priorizan todavia:
+Not prioritized yet:
 
-- golpe de ariete;
-- almacenamiento transitorio;
-- modelos sparse avanzados;
-- optimizacion o calibracion automatica.
+- water hammer;
+- transient storage;
+- advanced sparse formulations;
+- optimization or automatic calibration.
 
-## 2. Magnitudes y convencion de signos
+## 2. Quantities and sign convention
 
-Hydranet usa una formulacion basada en altura piezometrica:
+Hydranet uses a piezometric-head-based formulation:
 
 ```text
 H = Z + p / gamma
 ```
 
-donde:
+where:
 
-- `H` es la altura piezometrica;
-- `Z` es la cota;
-- `p / gamma` es la altura de presion.
+- `H` is the piezometric head;
+- `Z` is the elevation;
+- `p / gamma` is the pressure head.
 
-La altura de presion se recupera como:
-
-```text
-altura_de_presion = H - Z
-```
-
-Convencion de signos del proyecto:
-
-- `Q > 0` en una conexion significa flujo desde su nodo local 1 hacia su
-  nodo local 2.
-- `externalFlow > 0` en un nodo significa caudal saliendo del nodo.
-- el residual nodal se construye como:
+Pressure head is recovered as:
 
 ```text
-R_i = externalFlow_i + suma(de caudales que salen del nodo i)
+pressure_head = H - Z
 ```
 
-Esta convencion se mantiene en:
+Project sign convention:
+
+- `Q > 0` in one connection means flow from local node 1 to local node 2.
+- `externalFlow > 0` at one node means flow leaving the node.
+- the nodal residual is assembled as:
+
+```text
+R_i = externalFlow_i + sum(of flows leaving node i)
+```
+
+This convention is preserved in:
 
 - `ConnectionEntry.getFlowLeavingNode(...)`;
-- el ensamblaje de residuales;
-- la interpretacion de `connection_results`;
-- los tests de contrato y regresion.
+- residual assembly;
+- interpretation of `connection_results`;
+- contract and regression tests.
 
-## 3. Variables del problema
+## 3. Problem variables
 
-En la formulacion actual:
+In the current formulation:
 
-- los nodos frontera tienen `H` prescrita;
-- los nodos no frontera aportan una incognita al sistema no lineal;
-- cada conexion calcula su caudal operativo a partir de las dos alturas
-  nodales de sus extremos.
+- boundary nodes have prescribed `H`;
+- non-boundary nodes contribute one unknown to the nonlinear system;
+- each connection computes its operating flow from the two nodal heads at its ends.
 
-Si hay `N_u` nodos no frontera, el solve estacionario construye un
-vector:
+If there are `N_u` non-boundary nodes, the steady-state solve builds:
 
 ```text
 x = [H_1, H_2, ..., H_Nu]
 ```
 
-Ese vector se mapea internamente a ids de nodos para poder evaluar la
-red sin perder trazabilidad.
+That vector is mapped internally to node IDs so the network can be
+evaluated without losing traceability.
 
-## 4. Ley general de una conexion
+## 4. General connection law
 
-Todas las conexiones implementan la interfaz:
+All connections implement:
 
 ```python
 connection.getFlowRate(H1, H2)
 ```
 
-Conceptualmente, Hydranet trabaja con leyes del tipo:
+Conceptually, Hydranet works with laws of the form:
 
 ```text
 Delta H = H2 - H1 = h(Q)
 ```
 
-Para elementos disipativos:
+For dissipative elements:
 
-- si `Q > 0`, lo normal es que `Delta H < 0`;
-- si `Q < 0`, lo normal es que `Delta H > 0`;
-- si `Delta H = 0`, el modelo debe devolver `Q = 0` o un valor
-  numericamente equivalente a cero.
+- if `Q > 0`, the typical case is `Delta H < 0`;
+- if `Q < 0`, the typical case is `Delta H > 0`;
+- if `Delta H = 0`, the model should return `Q = 0` or a numerically equivalent value.
 
-Esto permite definir modelos:
+This allows:
 
-- analiticos;
-- aproximados;
-- interpolados desde muestras;
-- regresionados;
-- o futuros modelos de bombas, valvulas o perdidas locales.
+- analytical models;
+- approximations;
+- interpolated data-driven models;
+- regression-based models;
+- future pumps, valves, or local-loss elements.
 
-## 5. Ecuaciones nodales
+## 5. Nodal equations
 
-Para cada nodo no frontera `i`, Hydranet construye un residual de
-continuidad:
+For each non-boundary node `i`, Hydranet builds a continuity residual:
 
 ```text
-R_i(H) = Qext_i + suma_j Qij(H_i, H_j)
+R_i(H) = Qext_i + sum_j Qij(H_i, H_j)
 ```
 
-donde:
+where:
 
-- `Qext_i` es el caudal externo del nodo;
-- `Qij(H_i, H_j)` es el caudal que la conexion `i-j` ve saliendo del
-  nodo `i`;
-- la suma recorre las conexiones incidentes al nodo.
+- `Qext_i` is the external flow at node `i`;
+- `Qij(H_i, H_j)` is the flow that connection `i-j` sees as leaving node `i`;
+- the sum runs over the incident connections of the node.
 
-El problema estacionario consiste en encontrar:
+The steady-state problem is:
 
 ```text
 R(H) = 0
 ```
 
-La clase `HydraulicSystem` materializa exactamente esta formulacion.
+`HydraulicSystem` materializes exactly this formulation.
 
-## 6. Modelos hidraulicos actuales
+## 6. Current hydraulic models
 
 ## 6.1. `FixedKQn_pipe`
 
-Modelo de ley potencial con parametros constantes:
+Constant power-law model:
 
 ```text
 Delta H = -k |Q|^n sign(Q)
 ```
 
-Su inversion es analitica:
+Its inverse is analytical:
 
 ```text
 Q = -sign(Delta H) (|Delta H| / k)^(1/n)
 ```
 
-Es util:
+It is useful:
 
-- como modelo simple;
-- como referencia algebraica;
-- como base de muchos casos de prueba;
-- como aproximacion compacta de un comportamiento disipativo.
+- as a simple model;
+- as an algebraic reference;
+- as the basis of many tests;
+- as a compact approximation of dissipative behavior.
 
 ## 6.2. `DW_pipe`
 
-Modelo fisico de referencia basado en Darcy-Weisbach:
+Reference physical model based on Darcy-Weisbach:
 
 ```text
 Delta H = -f(Re, e, D) * 8 L Q |Q| / (g pi^2 D^5)
 ```
 
-donde:
+where:
 
-- `L` es la longitud;
-- `D` es el diametro;
-- `e` es la rugosidad absoluta;
-- `nu` es la viscosidad cinematica;
-- `g` es la gravedad;
-- `f` es el factor de friccion de Darcy.
+- `L` is length;
+- `D` is diameter;
+- `e` is absolute roughness;
+- `nu` is kinematic viscosity;
+- `g` is gravity;
+- `f` is the Darcy friction factor.
 
-Tratamiento actual del factor de friccion:
+Current friction-factor treatment:
 
-- regimen laminar: `f = 64 / Re`;
-- regimen turbulento: correlacion explicita de Swamee-Jain;
-- transicion: interpolacion lineal entre los limites configurados.
+- laminar regime: `f = 64 / Re`;
+- turbulent regime: explicit Swamee-Jain correlation;
+- transition: linear interpolation between configurable limits.
 
-Como el modelo directo esta escrito como `Delta H = h(Q)`, el backend
-invierte numericamente la ley para obtener `Q(H1, H2)`.
+Because the direct model is written as `Delta H = h(Q)`, the backend
+inverts the law numerically to obtain `Q(H1, H2)`.
 
 ## 6.3. `KQn_pipe`
 
-Es una aproximacion local tipo `kQ^n` derivada de Darcy-Weisbach
-alrededor de un caudal operativo.
+Local `kQ^n` approximation derived from Darcy-Weisbach around one
+operating flow.
 
-La idea es aproximar localmente la ley de Darcy por:
+The idea is to approximate Darcy locally as:
 
 ```text
 Delta H ~= -K(Q0) |Q|^n(Q0) sign(Q)
 ```
 
-Los parametros locales se extraen alrededor de un caudal de referencia
-mediante una banda relativa configurable.
+The local parameters are extracted around one reference flow using a
+configurable relative band.
 
-Es util cuando se quiere:
+It is useful when you want to:
 
-- mantener una referencia basada en Darcy;
-- pero abaratar o simplificar el comportamiento local.
+- keep a Darcy-based reference;
+- but reduce or simplify local behavior.
 
-## 6.4. Modelos por datos
+## 6.4. Data-driven models
 
-Tambien existen conexiones que trabajan directamente sobre `Delta H`:
+There are also connections that work directly on `Delta H`:
 
 - `LinearInterpolationConnection`;
 - `PolynomialRegressionConnection`;
 - `FactorPolynomialConnection`.
 
-Estos modelos son utiles para:
+These models are useful for:
 
-- representar curvas tabuladas;
-- comparar aproximaciones;
-- soportar elementos futuros sin imponer desde el principio una ley
-  cerrada unica.
+- representing tabulated curves;
+- comparing approximations;
+- supporting future elements without forcing a single closed-form law upfront.
 
-## 7. Residuales y solve no lineal
+## 7. Residuals and nonlinear solve
 
-El solver recibe:
+The solver receives:
 
-- un orden de nodos desconocidos;
-- una estimacion inicial de alturas;
-- una funcion residual que devuelve el vector `R(H)`.
+- an ordering of unknown-head nodes;
+- an initial head estimate;
+- a residual function that returns the vector `R(H)`.
 
-En `MVP003` la API publica del framework es:
+In `MVP003`, the public framework API is:
 
 ```python
 from hydranet.solvers import solve
 ```
 
-Ese `solve(...)` devuelve un `SolveResult` propio del framework, no un
-objeto crudo de SciPy.
+That `solve(...)` returns a framework-owned `SolveResult`, not a raw
+SciPy object.
 
-Internamente, el solve actual sigue siendo denso y usa
+Internally, the current solve path is still dense and still uses
 `scipy.optimize.root(...)`.
 
-## 8. `problemScale` como heuristica de continuation
+## 8. `problemScale` as a continuation heuristic
 
-El backend conserva `problemScale` como herramienta numerica.
+The backend keeps `problemScale` as a numerical tool.
 
-Actualmente:
+Currently it:
 
-- escala alturas almacenadas usadas como semilla;
-- escala alturas frontera recuperadas desde el sistema;
-- escala caudales externos.
+- scales stored heads used as a seed;
+- scales boundary heads recovered from the system;
+- scales external flows.
 
-Eso define una familia de problemas intermedios mas suaves que puede
-servir para continuation, aunque en `MVP003` todavia no existe una capa
-de continuation completa como solver de alto nivel independiente.
+This defines a family of smoother intermediate problems that can later
+support continuation, although `MVP003` does not yet provide a complete
+high-level continuation solver.
 
-Es importante entender que `problemScale` es una heuristica numerica y
-no un cambio de modelo fisico fundamental.
+It is important to understand that `problemScale` is a numerical
+heuristic, not a change of physical model.
 
-## 9. Magnitudes derivadas tras resolver
+## 9. Derived quantities after solving
 
-Una vez resuelto el problema, el backend puede exponer:
+Once the problem is solved, the backend can expose:
 
-Por nodo:
+Per node:
 
-- altura piezometrica;
-- cota;
-- altura de presion;
-- caudal externo;
-- residual nodal;
-- conexiones incidentes.
+- piezometric head;
+- elevation;
+- pressure head;
+- external flow;
+- nodal residual;
+- incident connections.
 
-Por conexion:
+Per connection:
 
-- caudal;
-- diferencia de altura;
-- sentido fisico del flujo;
-- perdidas o variaciones de carga;
-- y, cuando el modelo lo permite, velocidad, Reynolds, factor de
-  friccion y regimen.
+- flow rate;
+- head difference;
+- physical flow direction;
+- head loss or head variation;
+- and, when the model allows it, velocity, Reynolds number, friction factor, and regime.
 
-La GUI no necesita recalcular estas magnitudes: debe leerlas desde
-`NodeResult`, `ConnectionResult` o los snapshots de aplicacion.
+The GUI should not recompute these quantities: it should read them from
+`NodeResult`, `ConnectionResult`, or the application export payloads.
 
-## 10. Implicaciones para la extensibilidad
+## 10. Implications for extensibility
 
-La arquitectura matematica elegida favorece que un nuevo elemento se
-integre si puede responder a esta pregunta:
+The chosen mathematical architecture favors a new element whenever it
+can answer this question:
 
 ```text
-dados H1 y H2, cual es el caudal Q del elemento?
+given H1 and H2, what is the element flow rate Q?
 ```
 
-Por eso la interfaz minima de una conexion es pequeña, y por eso la
-declaracion de parametros, la factory, el JSON y la GUI pueden
-centralizarse razonablemente alrededor de ese contrato.
+That is why the minimum connection interface is small, and why
+parameter declaration, the factory, JSON, and the GUI can be
+centralized reasonably well around that contract.

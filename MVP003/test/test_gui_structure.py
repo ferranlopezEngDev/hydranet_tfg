@@ -26,7 +26,10 @@ class GuiStructureTests(unittest.TestCase):
         self.assertEqual(state.active_solver_name, get_default_solver_name())
         self.assertEqual(state.status_message, "GUI ready")
         self.assertEqual(state.current_network_path, None)
-        self.assertEqual(state.last_snapshot, None)
+        self.assertEqual(state.current_file_path, None)
+        self.assertEqual(state.last_solve_result, None)
+        self.assertEqual(state.last_result_export, None)
+        self.assertFalse(state.is_dirty)
 
     def test_curve_figure_builder_creates_one_line_plot(self) -> None:
         figure = build_curve_figure(

@@ -1,33 +1,32 @@
 # `src/utils`
 
-Este paquete agrupa helpers pequeños que no son propietarios del dominio
-hidraulico.
+This package groups small helpers that do not own hydraulic-domain
+logic.
 
-## Criterio de uso
+## Usage criterion
 
-Una utilidad debe vivir aqui solo si:
+One utility should live here only if:
 
-- es realmente reutilizable;
-- no pertenece claramente a una ley hidraulica concreta;
-- y sigue siendo facil de borrar o mover.
+- it is genuinely reusable;
+- it does not clearly belong to one specific hydraulic law;
+- and it remains easy to remove or relocate later.
 
-Si una funcion se vuelve central para una formulacion fisica o para un
-solver especifico, probablemente deberia moverse a
-`src/hydraulic_solver/`.
+If one function becomes central to a physical formulation or to one
+specific solver, it probably belongs in `src/hydraulic_solver/`.
 
-## Modulos
+## Modules
 
 - `general_tools.py`
-  helper generico de medida de tiempo.
+  Generic timing helper.
 - `scalar_root_solvers.py`
-  implementaciones compactas y didacticas de metodos de raiz escalar.
+  Compact and didactic scalar root-finding implementations.
 
-## Relacion con el resto del proyecto
+## Relation to the rest of the project
 
-Estos modulos son auxiliares.
+These modules are auxiliary.
 
-No definen:
+They do not define:
 
-- la formulacion H-based;
-- la factory de conexiones;
-- ni la API publica del framework.
+- the H-based formulation;
+- the connection factory;
+- the public framework API.

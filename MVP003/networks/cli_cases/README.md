@@ -1,41 +1,41 @@
 # `networks/cli_cases`
 
-Esta carpeta contiene casos JSON pequeños y legibles para regresion,
-pruebas manuales y demostraciones.
+This folder contains small and readable JSON cases for regression,
+manual testing, and demonstrations.
 
-## Casos incluidos
+## Included cases
 
 - `01_single_pipe_valid.json`
-  Red minima valida con una tuberia `fixed_kqn_pipe`.
+  Minimal valid network with one `fixed_kqn_pipe`.
 - `02_parallel_pipes_valid.json`
-  Dos tuberias en paralelo hacia un nodo de demanda.
+  Two parallel pipes feeding one demand node.
 - `03_three_reservoirs_valid.json`
-  Caso clasico de tres depositos y un nodo central desconocido.
+  Classic three-reservoir case with one central unknown node.
 - `04_isolated_node_invalid.json`
-  Topologia invalida con nodo aislado.
+  Invalid topology with one isolated node.
 - `05_missing_boundary_invalid.json`
-  Topologia conectada sin nodo frontera.
+  Connected topology without one boundary node.
 - `06_single_dw_pipe_valid.json`
-  Caso minimo con `dw_pipe`.
+  Minimal `dw_pipe` case.
 - `07_single_kqn_pipe_valid.json`
-  Caso minimo con `kqn_pipe`.
+  Minimal `kqn_pipe` case.
 - `08_single_linear_interpolation_valid.json`
-  Caso minimo con conexion interpolada.
+  Minimal interpolated-connection case.
 - `09_single_polynomial_regression_valid.json`
-  Caso minimo con regresion polinomica.
+  Minimal polynomial-regression case.
 - `10_single_factor_polynomial_valid.json`
-  Caso minimo con polinomio factorizado con signo.
+  Minimal signed factorized-polynomial case.
 
-## Uso recomendado
+## Recommended use
 
-Estos ficheros sirven para:
+These files are useful for:
 
-- validar la carga y el guardado JSON;
-- comprobar mensajes de validacion;
-- probar la GUI con casos pequeños;
-- verificar cambios en modelos concretos.
+- validating JSON load and save;
+- checking validation messages;
+- trying the GUI with small cases;
+- verifying changes in specific models.
 
-## Documentacion relacionada
+## Related documentation
 
-- [JSON, resultados y GUI](../../docs/json_resultados_y_gui.md)
-- [Fundamentos fisicos y matematicos](../../docs/fundamentos_fisicos_y_matematicos.md)
+- [JSON, results, and GUI](../../docs/json_resultados_y_gui.md)
+- [Physical and mathematical foundations](../../docs/fundamentos_fisicos_y_matematicos.md)

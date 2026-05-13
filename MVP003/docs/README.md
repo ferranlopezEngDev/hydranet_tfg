@@ -1,38 +1,42 @@
-# Documentacion de MVP003
+# MVP003 Documentation
 
-Esta carpeta concentra la documentacion canónica de `MVP003`.
+This folder contains the canonical documentation for `MVP003`.
 
-La idea es que los README de cada subpaquete sean cortos y sirvan como
-puertas de entrada, mientras que aqui vive la explicacion de fondo del
-framework: base fisica, formulacion matematica, decisiones de
-implementacion y guias de extension.
+The idea is that package-level READMEs stay short and act as entry
+points, while this folder holds the deeper explanation of the framework:
+physical foundations, mathematical formulation, implementation
+decisions, and extension guidelines.
 
-## Orden recomendado de lectura
+## Recommended reading order
 
-1. [Fundamentos fisicos y matematicos](fundamentos_fisicos_y_matematicos.md)
-   Explica la formulacion H-based, la convencion de signos, las ecuaciones
-   nodales y los modelos hidraulicos actuales.
-2. [Arquitectura e implementacion](arquitectura_e_implementacion.md)
-   Explica como se traduce esa formulacion a objetos, registros, serializacion,
-   solvers y resultados.
-3. [JSON, resultados y GUI](json_resultados_y_gui.md)
-   Explica el contrato entre backend, persistencia y aplicacion/GUI.
-4. [Guia de extension](guia_de_extension.md)
-   Explica como anadir nuevos modelos, nuevos objetos configurables,
-   validaciones y solvers.
+1. [Physical and mathematical foundations](fundamentos_fisicos_y_matematicos.md)
+   Explains the H-based formulation, the sign convention, the nodal
+   equations, and the current hydraulic models.
+2. [Architecture and implementation](arquitectura_e_implementacion.md)
+   Explains how that formulation is translated into objects, registries,
+   serialization, solvers, and results.
+3. [JSON, results, and GUI](json_resultados_y_gui.md)
+   Explains the contract between the backend, persistence, and the
+   application/GUI layers.
+4. [Extension guide](guia_de_extension.md)
+   Explains how to add new models, new configurable objects, new
+   validation rules, and new solvers.
 
-## Objetivo de la documentacion
+## Documentation goals
 
-La documentacion de `MVP003` intenta cubrir cuatro niveles a la vez:
+The `MVP003` documentation tries to cover four levels at the same time:
 
-- base fisica: que representa cada magnitud y por que las ecuaciones son asi;
-- base matematica: como se formula el problema no lineal estacionario;
-- implementacion: que clases y modulos materializan esa formulacion;
-- extensibilidad: que hay que tocar para crecer sin duplicar logica.
+- physical basis: what each quantity means and why the equations look
+  the way they do;
+- mathematical basis: how the nonlinear steady-state problem is posed;
+- implementation: which classes and modules materialize that
+  formulation;
+- extensibility: what needs to change when Hydranet grows without
+  duplicating logic.
 
-## Relacion con los README del repo
+## Relation to the repo READMEs
 
-- `README.md` en la raiz del repo: indice general de versiones.
-- `MVP003/README.md`: portada de la version actual y comandos habituales.
-- `src/*/README.md`: orientacion por paquete.
-- `test/`, `benchmarks/` y `networks/`: documentacion operativa de apoyo.
+- root `README.md`: high-level version index for the repository.
+- `MVP003/README.md`: landing page and common commands for the current version.
+- `src/*/README.md`: package-level orientation.
+- `test/`, `benchmarks/`, and `networks/`: operational supporting docs.

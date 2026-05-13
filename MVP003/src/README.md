@@ -1,30 +1,30 @@
-# `src` en MVP003
+# `src` in MVP003
 
-`src/` contiene la implementacion interna de Hydranet.
+`src/` contains the internal implementation of Hydranet.
 
-La API publica recomendada para usuarios del framework es `hydranet/`,
-pero `src/` sigue siendo la referencia principal para entender como esta
-construido el backend y como se integra con la app.
+The recommended public API for framework users is `hydranet/`, but
+`src/` remains the main reference to understand how the backend is built
+and how it integrates with the app.
 
-## Paquetes internos
+## Internal packages
 
-- `hydraulic_solver/`: dominio hidraulico, residuals, factory, resultados
-  y adaptadores de solver.
-- `application/`: casos de uso para cargar, validar, resolver y exportar.
-- `gui/`: interfaz `tkinter`.
-- `plotting/`: utilidades de visualizacion y figuras.
-- `utils/`: helpers ligeros no propietarios del dominio.
+- `hydraulic_solver/`: hydraulic domain, residuals, factory, results,
+  and solver adapters.
+- `application/`: use cases for loading, validating, solving, and exporting.
+- `gui/`: `tkinter` interface.
+- `plotting/`: visualization helpers and figures.
+- `utils/`: lightweight helpers that do not own domain logic.
 
-## Direccion de dependencias
+## Dependency direction
 
 ```text
 gui -> application -> hydraulic_solver
 ```
 
-`hydranet/` reexporta una parte estable del backend para uso externo.
+`hydranet/` re-exports one stable subset of the backend for external use.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Arquitectura e implementacion](../docs/arquitectura_e_implementacion.md)
-- [Fundamentos fisicos y matematicos](../docs/fundamentos_fisicos_y_matematicos.md)
-- [Guia de extension](../docs/guia_de_extension.md)
+- [Architecture and implementation](../docs/arquitectura_e_implementacion.md)
+- [Physical and mathematical foundations](../docs/fundamentos_fisicos_y_matematicos.md)
+- [Extension guide](../docs/guia_de_extension.md)

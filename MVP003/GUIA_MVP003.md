@@ -1,60 +1,59 @@
-# Guia de arranque de MVP003
+# MVP003 Quickstart Guide
 
-Esta guia sirve como vista rapida para entender que incluye `MVP003` y
-por donde conviene empezar.
+This guide is a fast overview of what `MVP003` includes and where it is
+best to start.
 
-## 1. Que es MVP003
+## 1. What MVP003 is
 
-`MVP003` es la iteracion en la que Hydranet empieza a comportarse de
-forma mas clara como framework backend, y no solo como conjunto de
-scripts y GUI.
+`MVP003` is the iteration where Hydranet starts behaving more clearly as
+a backend framework, not only as a collection of scripts and GUI code.
 
-Sus ideas principales son:
+Its main ideas are:
 
-- API publica mas estable;
-- metadatos declarativos de parametros;
-- JSON y factory mas centralizados;
-- resultados propios del framework;
-- mejor separacion entre backend y GUI.
+- a more stable public API;
+- declarative parameter metadata;
+- more centralized JSON and factory behavior;
+- framework-owned results;
+- better separation between backend and GUI.
 
-## 2. Por donde empezar
+## 2. Where to start
 
-Si quieres usar el framework:
+If you want to use the framework:
 
-1. lee `README.md`;
-2. lee `docs/fundamentos_fisicos_y_matematicos.md`;
-3. lee `docs/arquitectura_e_implementacion.md`;
-4. prueba el ejemplo minimo con `hydranet/`.
+1. read `README.md`;
+2. read `docs/fundamentos_fisicos_y_matematicos.md`;
+3. read `docs/arquitectura_e_implementacion.md`;
+4. try the minimal example with `hydranet/`.
 
-Si quieres trabajar sobre la app:
+If you want to work on the app:
 
-1. lee `src/application/README.md`;
-2. lee `docs/json_resultados_y_gui.md`;
-3. lanza `python src/gui_app.py`.
+1. read `src/application/README.md`;
+2. read `docs/json_resultados_y_gui.md`;
+3. launch `python src/gui_app.py`.
 
-Si quieres extender modelos:
+If you want to extend models:
 
-1. lee `docs/guia_de_extension.md`;
-2. revisa `src/hydraulic_solver/connections.py`;
-3. revisa `test/test_parameter_metadata.py`;
-4. revisa `test/test_connection_factory.py`.
+1. read `docs/guia_de_extension.md`;
+2. inspect `src/hydraulic_solver/connections.py`;
+3. inspect `test/test_parameter_metadata.py`;
+4. inspect `test/test_connection_factory.py`.
 
-## 3. Mapa rapido de carpetas
+## 3. Fast folder map
 
 - `hydranet/`
-  API publica recomendada.
+  Recommended public API.
 - `src/hydraulic_solver/`
-  backend fisico y numerico.
+  Physical and numerical backend.
 - `src/application/`
-  capa de casos de uso.
+  Use-case layer.
 - `src/gui/`
-  interfaz `tkinter`.
+  `tkinter` interface.
 - `test/`
-  regresion automatica y ejemplos ejecutables.
+  Automated regression and executable examples.
 - `benchmarks/`
-  medicion reproducible.
+  Reproducible measurements.
 
-## 4. Comandos utiles
+## 4. Useful commands
 
 ```bash
 python -m unittest discover -s test -p 'test_*.py'
@@ -63,10 +62,10 @@ python benchmarks/generate_synthetic_networks.py solver_unknown_heads 10
 python benchmarks/benchmark_solver.py networks/stress_cases/solver_stress_unknown_heads_10.json
 ```
 
-## 5. Documentacion principal
+## 5. Main documentation
 
-- [Mapa de documentacion](docs/README.md)
-- [Fundamentos fisicos y matematicos](docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](docs/arquitectura_e_implementacion.md)
-- [JSON, resultados y GUI](docs/json_resultados_y_gui.md)
-- [Guia de extension](docs/guia_de_extension.md)
+- [Documentation map](docs/README.md)
+- [Physical and mathematical foundations](docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](docs/arquitectura_e_implementacion.md)
+- [JSON, results, and GUI](docs/json_resultados_y_gui.md)
+- [Extension guide](docs/guia_de_extension.md)

@@ -1,40 +1,39 @@
 # `src/hydraulic_solver`
 
-Este paquete es el nucleo del framework en `MVP003`.
+This package is the core of the framework in `MVP003`.
 
-## Que vive aqui
+## What lives here
 
-- modelos de nodo y conexion;
-- formulacion H-based del problema;
-- ensamblaje de residuales nodales;
-- metadatos declarativos de parametros;
-- registro/factory de conexiones;
-- serializacion JSON de red;
-- resultados propios del framework;
-- adaptadores de solver.
+- node and connection models;
+- the H-based problem formulation;
+- nodal residual assembly;
+- declarative parameter metadata;
+- connection registry/factory;
+- network JSON serialization;
+- framework-owned result objects;
+- solver adapters.
 
-## Modulos clave
+## Key modules
 
-- `parameters.py`: `ParameterSpec`, `Parameterized` y validacion generica.
-- `nodes.py`: clase `Node`.
-- `systems.py`: `Connection`, `ConnectionEntry`, `HydraulicSystem` e
-  indice de conectividad.
-- `connections.py`: formulas y modelos hidraulicos.
-- `factory.py`: registro, creacion y exportacion de conexiones.
+- `parameters.py`: `ParameterSpec`, `Parameterized`, and generic validation.
+- `nodes.py`: `Node`.
+- `systems.py`: `Connection`, `ConnectionEntry`, `HydraulicSystem`, and the connectivity index.
+- `connections.py`: formulas and hydraulic models.
+- `factory.py`: registration, creation, and export of connections.
 - `results.py`: `SolveResult`, `NodeResult`, `ConnectionResult`.
-- `solvers/`: solve publico de framework y puentes de bajo nivel con SciPy.
+- `solvers/`: public framework solve API and low-level SciPy bridges.
 
-## Que no deberia vivir aqui
+## What should not live here
 
-No deberian vivir aqui:
+The following should not live here:
 
-- widgets de GUI;
-- estado de sesion de la aplicacion;
-- logica visual o de presentacion;
-- mensajes dependientes de un toolkit concreto.
+- GUI widgets;
+- application session state;
+- visual or presentation logic;
+- toolkit-specific user messages.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Fundamentos fisicos y matematicos](../../docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](../../docs/arquitectura_e_implementacion.md)
-- [Guia de extension](../../docs/guia_de_extension.md)
+- [Physical and mathematical foundations](../../docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](../../docs/arquitectura_e_implementacion.md)
+- [Extension guide](../../docs/guia_de_extension.md)

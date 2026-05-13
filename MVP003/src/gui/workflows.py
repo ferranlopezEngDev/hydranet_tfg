@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from collections.abc import Mapping, Sequence
 import json
-from math import isfinite
-from time import perf_counter
+from math import inf, isfinite
 
 from src.application import (
-    build_result_snapshot,
-    evaluate_network_state,
     export_network_spec,
     get_network_summary,
     get_solver_method_help_text,
@@ -18,13 +15,16 @@ from src.application import (
     inspect_connection,
     inspect_node,
     list_solvers,
-    solve_network,
     validate_network,
 )
 from src.hydraulic_solver import (
+    SolveResult,
+    build_connection_results,
+    build_node_results,
     create_connection,
     export_connection_parameter_schema,
     export_connection_spec,
+    solve,
 )
 from src.hydraulic_solver.factory import (
     get_connection_parameter_template as get_connection_parameter_template_from_factory,
@@ -77,11 +77,12 @@ def get_solver_configuration_help_text() -> str:
         "Solver configuration:\n"
         "- Method selects the SciPy root algorithm.\n"
         "- Tolerance maps to the global `tol` argument of `scipy.optimize.root`.\n"
-        "- Advanced Options must be one JSON object forwarded as the SciPy "
+        "- Advanced options must be one JSON object forwarded as the SciPy "
         "`options` mapping.\n"
         "- Changing the method can load a recommended default JSON template.\n"
         "- If the topology cannot be solved strictly, the app falls back to "
-        "current-state evaluation using the stored node heads."
+        "current-state evaluation using the node heads already stored in the "
+        "network."
     )
 
 
@@ -102,45 +103,37 @@ def get_connection_parameter_schema_text(connection_type: str) -> str:
 
 
 def format_json(data: object) -> str:
-    """Return stable pretty JSON for GUI editors and inspectors."""
-    return json.dumps(data, indent=2, sort_keys=True)
+    """Return stable pretty JSON for GUI inspectors and export previews."""
+    return json.dumps(_make_jsonable(data), indent=2, sort_keys=True)
 
 
 def parse_json_mapping(raw_text: str) -> dict[str, object]:
     """Parse one JSON object from a text widget."""
     stripped_text = raw_text.strip()
-
     if not stripped_text:
         return {}
 
     value = json.loads(stripped_text)
-
     if not isinstance(value, dict):
         raise ValueError("Expected one JSON object with key/value pairs")
-
     return dict(value)
 
 
 def parse_optional_float_sequence(raw_text: str) -> tuple[float, ...] | None:
     """Parse a comma-separated float list, or return `None` when empty."""
     stripped_text = raw_text.strip()
-
     if not stripped_text:
         return None
 
     values: list[float] = []
-
     for raw_item in stripped_text.split(","):
         item = raw_item.strip()
-
         if not item:
             continue
 
         numeric_value = float(item)
-
         if not isfinite(numeric_value):
             raise ValueError("Initial-head values must be finite")
-
         values.append(numeric_value)
 
     return tuple(values)
@@ -149,22 +142,18 @@ def parse_optional_float_sequence(raw_text: str) -> tuple[float, ...] | None:
 def parse_optional_float_value(raw_text: str) -> float | None:
     """Parse one finite float or return `None` when the entry is empty."""
     stripped_text = raw_text.strip()
-
     if not stripped_text:
         return None
 
     numeric_value = float(stripped_text)
-
     if not isfinite(numeric_value):
         raise ValueError("Numeric values must be finite")
-
     return numeric_value
 
 
 def parse_optional_string_sequence(raw_text: str) -> tuple[str, ...] | None:
     """Parse a comma-separated string list, or return `None` when empty."""
     stripped_text = raw_text.strip()
-
     if not stripped_text:
         return None
 
@@ -278,50 +267,48 @@ def run_simulation_for_gui(
     initial_heads_text: str,
     update_nodes: bool,
     problem_scale_text: str,
-) -> tuple[object, object, dict[str, object]]:
+) -> tuple[object, SolveResult, dict[str, object]]:
     """Validate, solve, or evaluate the current network for GUI use."""
-    total_started = perf_counter()
     normalized_solver_name = solver_name.strip()
     normalized_node_ids = parse_optional_string_sequence(node_ids_text)
-    problem_scale = float(problem_scale_text)
-    validation_started = perf_counter()
+    normalized_problem_scale = float(problem_scale_text)
     validation = validate_network(system)
-    validation_seconds = perf_counter() - validation_started
-    solver_configuration = {
-        "method": (
-            solver_method_name.strip()
-            or get_registered_solver_default_method(normalized_solver_name)
-        ),
-        "tol": parse_optional_float_value(solver_tolerance_text),
-        "options": parse_json_mapping(solver_options_text),
-    }
+    solver_method = (
+        solver_method_name.strip()
+        or get_registered_solver_default_method(normalized_solver_name)
+    )
+    solver_tolerance = parse_optional_float_value(solver_tolerance_text)
+    solver_options = parse_json_mapping(solver_options_text)
 
-    if validation.is_valid:
-        try:
-            outcome = solve_network(
-                system,
-                solver_name=normalized_solver_name,
-                node_ids=normalized_node_ids,
-                initial_heads=parse_optional_float_sequence(initial_heads_text),
-                update_nodes=update_nodes,
-                problem_scale=problem_scale,
-                solver_options=solver_configuration,
-            )
-        except ValueError as exc:
-            if str(exc) != "The system has no unknown-head nodes to solve":
-                raise
+    unknown_head_node_ids = tuple(system.getUnknownHeadNodeIds())
 
-            outcome = evaluate_network_state(
-                system,
-                solver_name=normalized_solver_name,
-                node_ids=normalized_node_ids,
-                problem_scale=problem_scale,
-                solver_options=solver_configuration,
-                message=(
-                    "Current-state evaluation used the heads already stored in the "
-                    "network because there were no unknown-head nodes to solve."
-                ),
-            )
+    if validation.is_valid and unknown_head_node_ids:
+        result = solve(
+            system,
+            solver_name=normalized_solver_name,
+            nodeIds=normalized_node_ids,
+            initialHeads=parse_optional_float_sequence(initial_heads_text),
+            updateNodes=update_nodes,
+            problemScale=normalized_problem_scale,
+            method=solver_method,
+            tol=solver_tolerance,
+            options=solver_options,
+        )
+    elif validation.is_valid:
+        result = _build_current_state_result(
+            system,
+            solver_name=normalized_solver_name,
+            node_ids=normalized_node_ids,
+            problem_scale=normalized_problem_scale,
+            update_nodes=update_nodes,
+            solver_method=solver_method,
+            solver_tolerance=solver_tolerance,
+            solver_options=solver_options,
+            message=(
+                "Current-state evaluation used the heads already stored in the "
+                "network because there were no unknown-head nodes to solve."
+            ),
+        )
     else:
         structural_validation = validate_network(
             system,
@@ -329,16 +316,18 @@ def run_simulation_for_gui(
             require_single_network=False,
             require_boundary_in_each_network=False,
         )
-
         if not structural_validation.is_valid:
             raise ValueError(validation.message)
 
-        outcome = evaluate_network_state(
+        result = _build_current_state_result(
             system,
             solver_name=normalized_solver_name,
             node_ids=normalized_node_ids,
-            problem_scale=problem_scale,
-            solver_options=solver_configuration,
+            problem_scale=normalized_problem_scale,
+            update_nodes=update_nodes,
+            solver_method=solver_method,
+            solver_tolerance=solver_tolerance,
+            solver_options=solver_options,
             message=(
                 "Current-state evaluation used the heads already stored in the "
                 "network because the topology is not solvable under the strict "
@@ -346,106 +335,93 @@ def run_simulation_for_gui(
             ),
         )
 
-    snapshot_started = perf_counter()
-    snapshot = build_result_snapshot(system, outcome)
-    snapshot_seconds = perf_counter() - snapshot_started
-    total_seconds = perf_counter() - total_started
-    performance_metrics = replace(
-        outcome.performance_metrics,
-        validation_seconds=validation_seconds,
-        snapshot_seconds=snapshot_seconds,
-        total_seconds=total_seconds,
+    result_export = build_result_export_data(
+        system,
+        validation,
+        result,
     )
-    outcome = replace(outcome, performance_metrics=performance_metrics)
-    snapshot["solve"] = outcome.to_dict()
-    return validation, outcome, snapshot
+    return validation, result, result_export
 
 
 def build_simulation_summary_text(
     validation: object | None,
-    outcome: object | None,
-    snapshot: dict[str, object] | None,
+    result: SolveResult | None,
+    result_export: dict[str, object] | None,
 ) -> str:
     """Return one stable human-readable solve summary for the GUI."""
-    if validation is None or outcome is None or snapshot is None:
+    if validation is None or result is None or result_export is None:
         return (
             "No simulation has been executed yet.\n\n"
-            "Use the Simulaciones mode to validate the current network, run one "
-            "registered solver or evaluate the current node heads, and generate "
-            "a snapshot for the Visualizador."
+            "Use the Simulation mode to validate the current network, run one "
+            "registered solver or evaluate the current node heads, and prepare "
+            "one exportable result payload."
         )
 
-    solve_data = snapshot["solve"]
-    network_summary = snapshot["networkSummary"]
-    validation_data = snapshot["validation"]
-    performance_data = solve_data.get("performance_metrics", {})
-    execution_mode = str(solve_data.get("execution_mode", "steady_state_solve"))
-    node_count_label = (
-        "Evaluated node heads"
-        if execution_mode == "current_state_evaluation"
-        else "Solved unknown heads"
-    )
+    network_summary = result_export["networkSummary"]
+    validation_data = result_export["validation"]
     mode_label = (
         "Current-state evaluation"
-        if execution_mode == "current_state_evaluation"
+        if result.execution_mode == "current_state_evaluation"
         else "Steady-state solve"
+    )
+    node_count_label = (
+        "Evaluated node heads"
+        if result.execution_mode == "current_state_evaluation"
+        else "Solved unknown heads"
     )
     lines = [
         f"Mode: {mode_label}",
-        f"Solver: {solve_data['solver_name']}",
-        f"Method: {solve_data.get('solver_method') or '<default>'}",
-        f"Tolerance: {solve_data.get('solver_tolerance') if solve_data.get('solver_tolerance') is not None else '<default>'}",
-        f"Advanced options: {solve_data.get('solver_options') or '<none>'}",
-        f"Success: {'yes' if solve_data['success'] else 'no'}",
-        f"Message: {solve_data['message']}",
+        f"Solver: {result.solver_name}",
+        f"Method: {result.solver_method or '<default>'}",
+        f"Tolerance: {result.solver_tolerance if result.solver_tolerance is not None else '<default>'}",
+        f"Advanced options: {result.solver_options or '<none>'}",
+        f"Success: {'yes' if result.success else 'no'}",
+        f"Message: {result.message}",
         f"Topology valid for solve: {'yes' if validation_data['is_valid'] else 'no'}",
         f"Validation message: {validation_data['message']}",
-        f"Problem scale: {solve_data['problem_scale']}",
-        f"Updated node objects: {'yes' if solve_data['update_nodes'] else 'no'}",
-        f"{node_count_label}: {len(solve_data['node_ids'])}",
+        f"Problem scale: {result.problem_scale}",
+        f"Updated node objects: {'yes' if result.update_nodes else 'no'}",
+        f"{node_count_label}: {len(result.node_ids)}",
         f"Network nodes: {network_summary['node_count']}",
         f"Network connections: {network_summary['connection_count']}",
-        f"Maximum residual magnitude: {float(performance_data.get('max_residual_abs', 0.0)):.6g}",
-        f"Residual L2 norm: {float(performance_data.get('residual_l2_norm', 0.0)):.6g}",
-        f"Validation time [s]: {float(performance_data.get('validation_seconds') or 0.0):.6f}",
-        f"Execution time [s]: {float(performance_data.get('execution_seconds') or 0.0):.6f}",
-        f"Snapshot time [s]: {float(performance_data.get('snapshot_seconds') or 0.0):.6f}",
-        f"Total time [s]: {float(performance_data.get('total_seconds') or 0.0):.6f}",
-        f"Function evaluations: {performance_data.get('nfev', '<n/a>')}",
-        f"Jacobian evaluations: {performance_data.get('njev', '<n/a>')}",
-        f"Iterations: {performance_data.get('nit', '<n/a>')}",
-        f"Status code: {performance_data.get('status', '<n/a>')}",
+        f"Maximum residual magnitude: {result.max_residual:.6g}",
+        f"Maximum residual node: {result.max_residual_node_id or '<n/a>'}",
+        f"Function evaluations: {result.function_evaluations if result.function_evaluations is not None else '<n/a>'}",
+        f"Jacobian evaluations: {result.jacobian_evaluations if result.jacobian_evaluations is not None else '<n/a>'}",
+        f"Iterations: {result.iterations if result.iterations is not None else '<n/a>'}",
+        f"Status code: {result.status if result.status is not None else '<n/a>'}",
     ]
     return "\n".join(lines)
 
 
-def build_snapshot_text(snapshot: dict[str, object] | None) -> str:
-    """Return the last solve snapshot as pretty JSON or one empty-state message."""
-    if snapshot is None:
-        return "No solve snapshot is available yet."
+def build_result_export_text(result_export: dict[str, object] | None) -> str:
+    """Return the latest result export as pretty JSON or one empty-state message."""
+    if result_export is None:
+        return "No result export is available yet."
 
-    return format_json(snapshot)
+    return format_json(result_export)
 
 
 def build_result_node_rows(
-    snapshot: dict[str, object] | None,
-) -> list[tuple[str, str, str, str, str]]:
-    """Return result-table rows for solved nodes."""
-    if snapshot is None:
+    result: SolveResult | None,
+) -> list[tuple[str, str, str, str, str, str, str]]:
+    """Return result-table rows for solved or evaluated nodes."""
+    if result is None:
         return []
 
-    rows: list[tuple[str, str, str, str, str]] = []
-    node_results = snapshot["nodeResults"]
+    rows: list[tuple[str, str, str, str, str, str, str]] = []
 
-    for node_id in sorted(node_results):
-        node_data = node_results[node_id]
+    for node_id in sorted(result.node_results):
+        node_data = result.node_results[node_id]
         rows.append(
             (
-                str(node_id),
-                f"{float(node_data['piezometric_head']):.6g}",
-                f"{float(node_data['pressure_head']):.6g}",
-                f"{float(node_data['external_flow']):.6g}",
-                f"{float(node_data['nodal_balance']):.6g}",
+                node_id,
+                f"{node_data.piezometric_head:.6g}",
+                f"{node_data.elevation:.6g}",
+                f"{node_data.pressure_head:.6g}",
+                f"{node_data.external_flow:.6g}",
+                "yes" if node_data.is_boundary else "no",
+                f"{node_data.residual:.6g}",
             )
         )
 
@@ -453,24 +429,26 @@ def build_result_node_rows(
 
 
 def build_result_connection_rows(
-    snapshot: dict[str, object] | None,
-) -> list[tuple[str, str, str, str, str]]:
-    """Return result-table rows for solved connections."""
-    if snapshot is None:
+    result: SolveResult | None,
+) -> list[tuple[str, str, str, str, str, str, str, str]]:
+    """Return result-table rows for solved or evaluated connections."""
+    if result is None:
         return []
 
-    rows: list[tuple[str, str, str, str, str]] = []
-    connection_results = snapshot["connectionResults"]
+    rows: list[tuple[str, str, str, str, str, str, str, str]] = []
 
-    for connection_id in sorted(connection_results):
-        connection_data = connection_results[connection_id]
+    for connection_id in sorted(result.connection_results):
+        connection_data = result.connection_results[connection_id]
         rows.append(
             (
-                str(connection_id),
-                str(connection_data["connection_type"]),
-                str(connection_data["node1_id"]),
-                str(connection_data["node2_id"]),
-                f"{float(connection_data['current_flow_rate']):.6g}",
+                connection_id,
+                connection_data.connection_type,
+                connection_data.node1_id,
+                connection_data.node2_id,
+                f"{connection_data.flow_rate:.6g}",
+                f"{connection_data.head_difference:.6g}",
+                connection_data.flow_from or "-",
+                connection_data.flow_to or "-",
             )
         )
 
@@ -478,38 +456,66 @@ def build_result_connection_rows(
 
 
 def build_result_plot_payload(
-    snapshot: dict[str, object] | None,
+    result: SolveResult | None,
     plot_kind: str,
 ) -> tuple[str, tuple[str, ...], tuple[float, ...], str]:
     """Build one categorical plot payload for the results viewer."""
-    if snapshot is None:
-        raise ValueError("No simulation snapshot is available")
+    if result is None:
+        raise ValueError("No simulation result is available")
 
     if plot_kind == "node_heads":
-        categories = tuple(sorted(snapshot["nodeResults"]))
+        categories = tuple(sorted(result.node_results))
         values = tuple(
-            float(snapshot["nodeResults"][node_id]["piezometric_head"])
+            float(result.node_results[node_id].piezometric_head)
             for node_id in categories
         )
-        return "Solved Node Heads", categories, values, "Head H"
+        return "Solved or evaluated node heads", categories, values, "Head H"
 
-    if plot_kind == "nodal_balance":
-        categories = tuple(sorted(snapshot["nodeResults"]))
+    if plot_kind == "nodal_residuals":
+        categories = tuple(sorted(result.node_results))
         values = tuple(
-            float(snapshot["nodeResults"][node_id]["nodal_balance"])
+            float(result.node_results[node_id].residual)
             for node_id in categories
         )
-        return "Node Residual Balance", categories, values, "Residual"
+        return "Node residual balance", categories, values, "Residual"
 
     if plot_kind == "connection_flows":
-        categories = tuple(sorted(snapshot["connectionResults"]))
+        categories = tuple(sorted(result.connection_results))
         values = tuple(
-            float(snapshot["connectionResults"][connection_id]["current_flow_rate"])
+            float(result.connection_results[connection_id].flow_rate)
             for connection_id in categories
         )
-        return "Connection Flow Rates", categories, values, "Flow Rate Q"
+        return "Connection flow rates", categories, values, "Flow rate Q"
 
     raise ValueError(f"Unknown result plot kind '{plot_kind}'")
+
+
+def build_result_export_data(
+    system: HydraulicSystem,
+    validation: object,
+    result: SolveResult,
+    *,
+    include_network_spec: bool = True,
+) -> dict[str, object]:
+    """Build one export-friendly JSON payload from the framework result."""
+    export_payload = {
+        "networkSummary": get_network_summary(system).to_dict(),
+        "validation": validation.to_dict() if hasattr(validation, "to_dict") else validation,
+        "solveResult": result.to_dict(include_raw_result=False),
+        "nodeResults": {
+            node_id: node_result.to_dict()
+            for node_id, node_result in result.node_results.items()
+        },
+        "connectionResults": {
+            connection_id: connection_result.to_dict()
+            for connection_id, connection_result in result.connection_results.items()
+        },
+    }
+
+    if include_network_spec:
+        export_payload["networkSpec"] = export_network_spec(system)
+
+    return _make_jsonable(export_payload)
 
 
 def build_model_curve_series(
@@ -559,18 +565,123 @@ def build_model_curve_series(
 def build_data_format_reference() -> str:
     """Return one concise explanation of the current network/result shapes."""
     return (
-        "Network spec:\n"
+        "Network JSON persistence:\n"
         "- nodes[nodeId] -> piezometricHead, elevation, externalFlow, isBoundary\n"
         "- connections[connectionId] -> type, params, node1Id, node2Id\n\n"
-        "Result snapshot:\n"
-        "- solver\n"
+        "GUI result export:\n"
         "- networkSummary\n"
         "- validation\n"
-        "- solve (including solver config and performance_metrics)\n"
+        "- solveResult\n"
         "- nodeResults\n"
         "- connectionResults\n"
         "- networkSpec\n"
     )
+
+
+def _build_current_state_result(
+    system: HydraulicSystem,
+    *,
+    solver_name: str,
+    node_ids: Sequence[str] | None,
+    problem_scale: float,
+    update_nodes: bool,
+    solver_method: str,
+    solver_tolerance: float | None,
+    solver_options: Mapping[str, object],
+    message: str,
+) -> SolveResult:
+    """Build one framework-native result from the current node heads."""
+    result_node_ids = tuple(node_ids or system.nodes.keys())
+    node_results = build_node_results(
+        system,
+        problem_scale=problem_scale,
+    )
+    connection_results = build_connection_results(
+        system,
+        problem_scale=problem_scale,
+    )
+    nodal_residuals = {
+        node_id: node_results[node_id].residual
+        for node_id in result_node_ids
+        if node_id in node_results
+    }
+    max_residual, max_residual_node_id = _get_max_residual_info(nodal_residuals)
+
+    return SolveResult(
+        success=True,
+        message=message,
+        solver_name=solver_name,
+        node_ids=result_node_ids,
+        node_heads={
+            node_id: node_result.piezometric_head
+            for node_id, node_result in node_results.items()
+        },
+        connection_flows={
+            connection_id: connection_result.flow_rate
+            for connection_id, connection_result in connection_results.items()
+        },
+        nodal_residuals=nodal_residuals,
+        max_residual=max_residual,
+        max_residual_node_id=max_residual_node_id,
+        iterations=None,
+        function_evaluations=None,
+        jacobian_evaluations=None,
+        status=None,
+        problem_scale=problem_scale,
+        update_nodes=update_nodes,
+        solver_method=solver_method,
+        solver_tolerance=solver_tolerance,
+        solver_options=dict(solver_options),
+        execution_mode="current_state_evaluation",
+        node_results=node_results,
+        connection_results=connection_results,
+        raw_result=None,
+    )
+
+
+def _get_max_residual_info(
+    nodal_residuals: Mapping[str, float],
+) -> tuple[float, str | None]:
+    """Return the maximum absolute residual and its node ID."""
+    if not nodal_residuals:
+        return 0.0, None
+
+    max_node_id: str | None = None
+    max_residual = -inf
+
+    for node_id, residual in nodal_residuals.items():
+        candidate = abs(float(residual))
+        if candidate > max_residual:
+            max_residual = candidate
+            max_node_id = node_id
+
+    return max_residual, max_node_id
+
+
+def _make_jsonable(value: object) -> object:
+    """Convert nested values into JSON-friendly builtins."""
+    if isinstance(value, Mapping):
+        return {
+            str(key): _make_jsonable(sub_value)
+            for key, sub_value in value.items()
+        }
+
+    if isinstance(value, (list, tuple)):
+        return [_make_jsonable(item) for item in value]
+
+    if hasattr(value, "tolist"):
+        return _make_jsonable(value.tolist())
+
+    if hasattr(value, "item"):
+        try:
+            return _make_jsonable(value.item())
+        except (TypeError, ValueError):
+            pass
+
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+
+    return repr(value)
 
 
 __all__ = [
@@ -584,10 +695,11 @@ __all__ = [
     "build_node_detail_text",
     "build_node_rows",
     "build_result_connection_rows",
+    "build_result_export_data",
+    "build_result_export_text",
     "build_result_node_rows",
     "build_result_plot_payload",
     "build_simulation_summary_text",
-    "build_snapshot_text",
     "format_json",
     "get_connection_parameter_template",
     "get_registered_solver_default_method",

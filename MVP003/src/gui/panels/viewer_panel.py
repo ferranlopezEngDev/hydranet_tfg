@@ -39,8 +39,8 @@ class ViewerPanel(ttk.Frame):
             on_status=on_status,
         )
 
-        self.visualizerNotebook.add(self.resultsPanel, text="Resultados")
-        self.visualizerNotebook.add(self.modelVisualizerPanel, text="Modelos")
+        self.visualizerNotebook.add(self.resultsPanel, text="Results")
+        self.visualizerNotebook.add(self.modelVisualizerPanel, text="Models")
 
     def seed_model_visualizer(self, connection_type: str, params_text: str) -> None:
         """Forward one connection definition into the model visualizer tab."""

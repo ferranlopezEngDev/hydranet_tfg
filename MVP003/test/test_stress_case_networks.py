@@ -52,7 +52,7 @@ class StressCaseNetworkTests(unittest.TestCase):
             with self.subTest(case_name=case_name):
                 system = load_network(str(CASE_DIRECTORY / case_name))
                 validation = validate_network(system)
-                _, outcome, snapshot = run_simulation_for_gui(
+                _, result, result_export = run_simulation_for_gui(
                     system,
                     solver_name="root",
                     solver_method_name="hybr",
@@ -65,8 +65,8 @@ class StressCaseNetworkTests(unittest.TestCase):
                 )
 
                 self.assertTrue(validation.is_valid)
-                self.assertEqual(outcome.execution_mode, "current_state_evaluation")
-                self.assertIn("connectionResults", snapshot)
+                self.assertEqual(result.execution_mode, "current_state_evaluation")
+                self.assertIn("connectionResults", result_export)
 
     def test_solver_stress_topologies_load_validate_and_solve(self) -> None:
         for case_name in (

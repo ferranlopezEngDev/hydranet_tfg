@@ -1,220 +1,187 @@
-# Backlog hacia MVP004
+# Backlog toward MVP004
 
-Este documento recoge ideas de evolucion para `MVP003` a partir del
-estado actual del repo. No todo esta pensado para el siguiente sprint;
-hay mezcla de backlog funcional, tecnico y de producto.
+This document collects evolution ideas for `MVP003` based on the
+current state of the repository. Not everything here is meant for the
+next sprint; it mixes functional, technical, and product backlog items.
 
-## Estado Actual Observado
+## Current observed state
 
-- La app ya tiene una sola ventana con tres modos: `Editor de redes`,
-  `Simulaciones` y `Visualizador`.
-- El editor actual es tabular y basado en formularios; todavia no hay
-  canvas topologico ni navegacion espacial de la red.
-- El solver publico expuesto por la aplicacion es `root`, con metodos de
-  `scipy.optimize.root`, tolerancia global y JSON avanzado de opciones.
-- La app ya soporta `current_state_evaluation` cuando no hay un solve
-  estricto posible, lo que permite inspeccionar caudales aunque no se
-  resuelvan nuevas presiones.
-- Los plots de modelos ya son interactivos gracias a la toolbar de
-  Matplotlib, pero el resto de la GUI sigue siendo mayormente estatica.
-- Existen casos de estres muy grandes, pero la GUI actual no esta
-  optimizada para abrir, renderizar o navegar millones de filas.
-- La documentacion ya cubre bastante bien los formatos base, aunque aun
-  hay espacio para guias mas operativas y de usuario final.
+- The app already uses one single window with three modes: network editor,
+  simulation, and viewer.
+- The editor is currently tabular and form-driven; there is still no
+  topological canvas or spatial navigation.
+- The public solver exposed by the app is `root`, with methods from
+  `scipy.optimize.root`, one global tolerance, and advanced JSON options.
+- The app already supports `current_state_evaluation` when a strict solve
+  is not possible, which allows flow inspection even when no new pressures
+  are solved.
+- Model plots are already interactive thanks to the Matplotlib toolbar,
+  but most of the GUI is still structurally simple.
+- Very large stress cases already exist, but the current GUI is not
+  optimized to open, render, or navigate millions of rows.
+- Documentation already covers the core formats well, although there is
+  still room for more operational and end-user guides.
 
-## GUI General
+## General GUI
 
-- Persistir tamano de ventana, paneles, pestanas y ultimo modo abierto.
-- Anadir menu superior clasico (`Archivo`, `Editar`, `Simulacion`,
-  `Visualizar`, `Ayuda`) ademas de la toolbar actual.
-- Incorporar atajos de teclado (`Ctrl+N`, `Ctrl+O`, `Ctrl+S`, `F5`,
-  `Ctrl+F`, etc.).
-- Anadir dialogo `Acerca de` con version, entorno y rutas utiles.
-- Mejorar consistencia visual entre textos en ingles y espanol.
-- Unificar tono y terminologia de botones, mensajes y cabeceras.
-- Guardar recientes (`recent files`) y permitir reabrirlos rapido.
-- Recordar la ultima carpeta usada para redes, snapshots y benchmarks.
-- Anadir preferencia para activar o desactivar ayudas contextuales.
-- Revisar accesibilidad basica: foco, tab order, tamano de fuente,
-  contraste y navegacion por teclado.
+- Persist window size, panels, tabs, and last open mode.
+- Add a classic top menu (`File`, `Edit`, `Simulation`, `View`, `Help`) in
+  addition to the current toolbar.
+- Add keyboard shortcuts (`Ctrl+N`, `Ctrl+O`, `Ctrl+S`, `F5`, `Ctrl+F`, etc.).
+- Add an `About` dialog with version, environment, and useful paths.
+- Improve visual consistency of buttons, messages, and headings.
+- Remember recent files and allow fast reopening.
+- Remember the last folder used for networks, result exports, and benchmarks.
+- Add a preference to enable or disable contextual help.
+- Review basic accessibility: focus, tab order, font size, contrast, and keyboard navigation.
 
-## Editor de Redes
+## Network editor
 
-- Canvas topologico con nodos arrastrables y conexiones dibujadas.
-- Auto-layout para redes pequenas y medianas.
-- Coordenadas opcionales de nodos en el `networkSpec`.
-- Seleccion multiple y operaciones en bloque.
-- Undo/redo real.
-- Duplicar nodos y conexiones.
-- Copiar/pegar entidades y subredes.
-- Busqueda y filtros por tipo, id, boundary, caudal externo o texto.
-- Ordenacion de tablas por columnas.
-- Panel de propiedades editable en vivo sin abrir dialogos modales.
-- Validacion en vivo mientras se edita.
-- Resaltado visual de nodos o conexiones invalidas.
-- Herramienta para centrar la vista en el elemento seleccionado.
-- Recuento rapido de tipos de conexiones y nodos boundary en la propia UI.
-- Asistentes para crear topologias comunes: serie, paralelo, anillo,
-  estrella, malla simple.
-- Biblioteca de plantillas de subredes reutilizables.
-- Importar varias redes y fusionarlas.
-- Deteccion de ids duplicados antes de confirmar un dialogo.
-- Confirmacion previa al borrar nodos con conexiones incidentes.
-- Edicion mas guiada de parametros por tipo de conexion, no solo JSON.
+- Topological canvas with draggable nodes and drawn connections.
+- Auto-layout for small and medium networks.
+- Optional node coordinates in `networkSpec`.
+- Multi-selection and bulk operations.
+- Real undo/redo.
+- Duplicate nodes and connections.
+- Copy/paste entities and subnetworks.
+- Search and filters by type, ID, boundary flag, external flow, or text.
+- Column sorting in tables.
+- Live editable property panel without modal dialogs.
+- Live validation while editing.
+- Visual highlighting of invalid nodes or connections.
+- Tool to center the view on the selected element.
+- Quick count of connection types and boundary nodes in the UI itself.
+- Wizards for common topologies: series, parallel, ring, star, simple mesh.
+- Library of reusable subnetwork templates.
+- Import several networks and merge them.
+- Detect duplicate IDs before confirming a dialog.
+- Better confirmation before removing nodes with incident connections.
 
-## Simulaciones y Solver
+## Simulations and solver
 
-- Formularios especificos por metodo de `scipy.root` en vez de depender
-  solo del JSON avanzado.
-- Separar metodos recomendados y experimentales en la GUI.
-- Mostrar claramente que el JSON visible corresponde al campo
-  `options` de SciPy y no al bloque completo de configuracion.
-- Presets de solver reutilizables y guardables por usuario.
-- Recuperar presets por tipo de red o por tamano del problema.
-- Historial de configuraciones usadas recientemente.
-- Comparacion lado a lado entre metodos `hybr`, `lm`, `krylov`,
-  `df-sane`, etc.
-- Ejecutar varios metodos sobre la misma red y resumir cual converge
-  mejor.
-- Reintentos automaticos con otras semillas iniciales.
-- Continuacion automatica con `problemScale`.
-- Exponer en GUI mas metadatos del solver bruto (`message`, `status`,
-  `success`, `nfev`, `njev`, `nit`).
-- Anadir callbacks o trazas de convergencia iteracion a iteracion.
-- Guardar configuracion de solver dentro de la sesion o del snapshot.
-- Permitir `Initial Heads` como override temporal tambien en modo
-  `current_state_evaluation`.
-- Mostrar advertencias cuando un metodo elegido no sea aconsejable para
-  el tamano del caso o para la falta de buena semilla.
-- Estudiar Jacobianos analiticos o aproximaciones mas eficientes.
-- Estudiar solvers dispersos o formulaciones mas escalables para redes
-  muy grandes.
-- Valorar separar el viejo `scipy_solver.py` si ya no aporta valor
-  publico, o documentar mejor por que sigue existiendo.
+- Method-specific forms for `scipy.root` instead of relying only on advanced JSON.
+- Separate recommended and experimental methods in the GUI.
+- Show clearly that the visible JSON corresponds to SciPy `options`, not the full solver configuration.
+- Reusable solver presets.
+- Load presets by network type or problem size.
+- Recent-configuration history.
+- Side-by-side comparison between `hybr`, `lm`, `krylov`, `df-sane`, etc.
+- Run several methods on the same network and summarize which converges best.
+- Automatic retries with alternative initial seeds.
+- Real continuation using `problemScale`.
+- Expose more low-level solver metadata in the GUI.
+- Add callbacks or iteration-by-iteration convergence traces.
+- Save solver configuration inside the session or exported result payload.
+- Allow `Initial Heads` as a temporary override in `current_state_evaluation`.
+- Show warnings when the selected method is a poor choice for the case size or seed quality.
+- Study analytical Jacobians or more efficient approximations.
+- Study sparse solvers or more scalable formulations for very large networks.
 
-## Resultados y Visualizador
+## Results and viewer
 
-- Hacer tambien interactivos los plots de `Resultados` con acciones mas
-  ricas sobre seleccion, leyenda y exportacion.
-- Panel especifico de metricas y convergencia.
-- Comparador entre dos snapshots o dos ejecuciones.
-- Superposicion entre resultado actual y baseline.
-- Baseline fijable desde GUI.
-- Filtros de resultados por magnitud, residual o tipo de conexion.
-- Resaltado de outliers en nodos o conexiones.
-- Mapas de color por head, presion, caudal o residual cuando exista
-  canvas topologico.
-- Visualizador de modelos con mas de dos curvas simultaneas.
-- Agrupar familias de modelos para comparaciones rapidas.
-- Guardar configuraciones de plot y rangos favoritos.
-- Exportacion de plots a PNG, SVG y CSV de puntos muestreados.
-- Exportacion de tablas de resultados a CSV.
-- Enlace rapido desde una conexion resultante al `Visualizador > Modelos`.
-- Mostrar formulas o descripcion matematica de cada modelo de conexion.
-- Visualizar incertidumbre o bandas si en el futuro se anaden ajustes o
-  calibracion.
+- Make `Results` plots more interactive.
+- Dedicated metrics and convergence panel.
+- Comparison between two result exports or two runs.
+- Overlay current result and one baseline.
+- Allow setting a baseline from the GUI.
+- Filter results by magnitude, residual, or connection type.
+- Highlight outliers in nodes or connections.
+- Add color maps once a topological canvas exists.
+- Allow more than two curves in the model visualizer.
+- Save favorite plot configurations and ranges.
+- Export plots to PNG, SVG, and sampled-point CSV.
+- Export result tables to CSV.
+- Quick link from one result connection to `Viewer > Models`.
+- Show equations or mathematical summaries for each connection model.
 
-## Performance y Grandes Redes
+## Performance and large networks
 
-- Historial de metricas por ejecucion dentro de la GUI.
-- Benchmark batch sobre carpetas completas de casos de estres.
-- Exportacion CSV/JSON de metricas agregadas.
-- Graficas de tiempo frente a nodos, conexiones e incognitas.
-- Medicion separada de parseo JSON, construccion del sistema,
-  validacion, solve y renderizado GUI.
-- Medicion de memoria y pico de uso.
-- Tests de regresion de rendimiento con umbrales configurables.
-- Avisos de seguridad o confirmacion antes de abrir casos gigantes.
-- Carga perezosa de tablas para no intentar pintar millones de filas.
-- Paginacion o virtualizacion de `Treeview` para redes grandes.
-- Modos reducidos de visualizacion para casos de estres:
-  solo resumen, sin tablas completas.
-- Barra de progreso para apertura, validacion y solve de casos grandes.
-- Cancelacion segura de una simulacion en curso.
-- Ejecucion en background para no congelar Tkinter.
-- Politicas de muestreo de plots adaptadas al tamano del caso.
+- Store execution metrics history inside the GUI.
+- Batch benchmarks over folders of stress cases.
+- Export aggregated metrics as CSV/JSON.
+- Plot time against node count, connection count, and unknown-head count.
+- Measure JSON parsing, system construction, validation, solve, and GUI rendering separately.
+- Measure memory and peak usage.
+- Add performance-regression checks with configurable thresholds.
+- Warn before opening giant cases.
+- Lazy-load tables instead of trying to render millions of rows.
+- Add pagination or virtualization to `Treeview` for large networks.
+- Add reduced visualization modes for stress cases.
+- Add progress bars for opening, validation, and solving large cases.
+- Add safe cancellation for long simulations.
+- Run work in background so Tkinter does not freeze.
 
-## Persistencia y Formatos
+## Persistence and formats
 
-- Versionado explicito del formato JSON.
-- Validacion de esquemas con `jsonschema`.
-- Metadata del proyecto y de la simulacion dentro del fichero.
-- Compatibilidad hacia atras entre versiones de `MVP`.
-- Exportacion/importacion de resultados con metadatos de rendimiento.
-- Guardar layout grafico cuando exista canvas de red.
-- Formato de sesion de GUI para restaurar estado de trabajo.
-- Permitir snapshots sin `networkSpec` completo cuando se quiera un
-  formato mas ligero.
-- Firmar o etiquetar ficheros generados automaticamente por benchmarks.
-- Herramientas de migracion entre variantes antiguas del JSON.
+- Explicit JSON format versioning.
+- Optional `jsonschema` validation.
+- Project and simulation metadata in files.
+- Backward compatibility across MVP versions.
+- Export/import result payloads with performance metadata.
+- Save graphical layout once a network canvas exists.
+- Add a GUI session format to restore work state.
+- Allow lighter result exports without the full `networkSpec` when needed.
+- Add migration tools between older JSON variants.
 
-## Casos de Prueba y Datos de Ejemplo
+## Test cases and example data
 
-- Mas casos de red realistas y menos solo sinteticos.
-- Casos de referencia con resultados esperados documentados.
-- Casos de borde para cada tipo de conexion.
-- Casos con errores tipicos de usuario para comprobar mensajes.
-- Casos para validar el modo `current_state_evaluation`.
-- Casos especificos por metodo de `root`.
-- Casos de stress orientados a memoria de GUI, no solo a solver.
-- Casos para comprobar exportacion e importacion de snapshots.
-- Datasets pequenos listos para demos, docencia y depuracion manual.
+- More realistic networks and fewer purely synthetic ones.
+- Reference cases with documented expected results.
+- Edge cases for each connection type.
+- User-error cases focused on messages.
+- Cases for `current_state_evaluation`.
+- Cases specific to each `root` method.
+- Stress cases focused on GUI memory, not only on the solver.
+- Cases for exported-result round trips.
+- Small ready-to-use datasets for demos, teaching, and manual debugging.
 
-## UX y Ayudas Contextuales
+## UX and contextual help
 
-- Extender tooltips al `Editor`, `Resultados` y dialogs modales.
-- Ayuda contextual para cada modelo de conexion y cada parametro.
-- Vincular ayuda con ejemplos de JSON validos.
-- Panel lateral de ayuda viva segun seleccion actual.
-- Mensajes de error mas guiados y accionables.
-- Distinguir visualmente errores, warnings e informacion.
-- Confirmaciones mas cuidadas para acciones destructivas.
-- Mejor feedback de estado durante operaciones largas.
-- Copiar al portapapeles JSON de nodos, conexiones, snapshots o errores.
-- Botones rapidos para restaurar defaults de formularios.
+- Extend tooltips to the editor, results, and modal dialogs.
+- Contextual help for each connection model and parameter.
+- Link help with valid JSON examples where appropriate.
+- Live side help panel based on the current selection.
+- More actionable error messages.
+- Better distinction between errors, warnings, and informational messages.
+- Better confirmations for destructive actions.
+- Better status feedback during long operations.
+- Quick actions to restore form defaults.
 
 ## Testing
 
-- Tests de GUI mas finos para configuracion del solver.
-- Tests para tooltips, botones de ayuda y carga de templates por metodo.
-- Casos de regresion por metodo de `scipy.root`.
-- Validacion automatica de snapshots exportados.
-- Smokes para los benchmarks de estres.
-- Golden files para formatos JSON y resumenes.
-- Tests de integracion que recorran flujos completos de editor ->
-  simulacion -> visualizador.
-- Tests de rendimiento acotados para proteger tiempos base.
-- Cobertura sobre errores de parseo y mensajes mostrados al usuario.
+- More detailed GUI tests for solver configuration.
+- Tests for tooltips, help buttons, and per-method templates.
+- Regression cases for each `scipy.root` method.
+- Automatic validation of exported result payloads.
+- Stress benchmark smoke tests.
+- Golden files for JSON formats and summaries.
+- Integration tests covering editor -> simulation -> viewer flows.
+- Bounded performance tests to protect baseline timings.
+- Coverage over parsing errors and user-facing messages.
 
-## Documentacion
+## Documentation
 
-- Guia de usuario final de la GUI con capturas.
-- Guia rapida de flujos recomendados: editar, validar, simular,
-  visualizar, exportar.
-- Documento especifico de cada modelo de conexion con formula,
-  parametros y rango esperado de uso.
-- Documento especifico del solver `root` y sus metodos.
-- Guia para interpretar `performance_metrics`.
-- Guia para usar y regenerar `stress_cases`.
-- Aclarar mejor cuando conviene `steady_state_solve` frente a
-  `current_state_evaluation`.
-- Revisar y unificar idioma de READMEs y mensajes de ayuda.
-- Changelog por MVP para entender diferencias entre `MVP001`, `MVP002`
-  y `MVP003`.
+- End-user GUI guide with screenshots.
+- Quick guide for the recommended flows: edit, validate, simulate, inspect, export.
+- Per-model documents with formulas, parameters, and expected operating range.
+- One dedicated document for the `root` solver and its methods.
+- Guide to interpret result and performance fields.
+- Guide to use and regenerate `stress_cases`.
+- Clarify when `steady_state_solve` is preferred over `current_state_evaluation`.
+- Keep README and help-language consistency across the project.
+- Changelog by MVP to understand differences between `MVP001`, `MVP002`, and `MVP003`.
 
-## Arquitectura y Mantenibilidad
+## Architecture and maintainability
 
-- Separar mejor la orquestacion de simulacion de la capa GUI.
-- Introducir objetos de configuracion y resultado mas ricos.
-- Crear una capa de servicios para benchmarks y stress tests.
-- Revisar si conviene pluginizar modelos de conexion y solvers.
-- Preparar la base para ejecucion asincrona o en background.
-- Reducir acoplamiento entre widgets y `GuiSessionState`.
-- Crear validadores reutilizables para formularios y JSON.
-- Mejorar la frontera entre capa de aplicacion y capa de presentacion.
-- Definir eventos o comandos de GUI mas explicitos en lugar de refrescos
-  globales frecuentes.
-- Introducir packaging moderno (`pyproject.toml`) si el proyecto sigue
-  creciendo.
-- Revisar estrategia de distribucion futura para escritorio.
-- Preparar extension futura a transitorio, calibracion o plugins.
+- Separate simulation orchestration more clearly from the GUI layer.
+- Introduce richer configuration and result objects where it pays off.
+- Create a service layer for benchmarks and stress tests.
+- Revisit whether connection models and solvers should become pluggable.
+- Prepare the base for asynchronous or background execution.
+- Reduce coupling between widgets and `GuiSessionState`.
+- Create reusable validators for forms and JSON.
+- Improve the boundary between application and presentation layers.
+- Introduce more explicit GUI events or commands instead of frequent full refreshes.
+- Move toward modern packaging (`pyproject.toml`) if the project keeps growing.
+- Revisit future desktop-distribution strategy.
+- Prepare eventual extension to transient simulation, calibration, or plugins.

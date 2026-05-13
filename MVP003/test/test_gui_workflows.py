@@ -60,9 +60,9 @@ class GuiWorkflowHelperTests(unittest.TestCase):
         self.assertIn("SciPy root algorithm", configuration_help)
         self.assertTrue(method_help)
 
-    def test_run_simulation_for_gui_builds_snapshot_payload(self) -> None:
+    def test_run_simulation_for_gui_builds_result_export_payload(self) -> None:
         system = solve_parallel_pipes.build_system()
-        validation, outcome, snapshot = run_simulation_for_gui(
+        validation, result, result_export = run_simulation_for_gui(
             system,
             solver_name="root",
             solver_method_name="hybr",
@@ -75,12 +75,12 @@ class GuiWorkflowHelperTests(unittest.TestCase):
         )
 
         self.assertTrue(validation.is_valid)
-        self.assertTrue(outcome.success)
-        self.assertEqual(outcome.solver_method, "hybr")
-        self.assertEqual(outcome.solver_options["maxfev"], 200)
-        self.assertIn("solve", snapshot)
-        self.assertIn("nodeResults", snapshot)
-        self.assertIn("connectionResults", snapshot)
+        self.assertTrue(result.success)
+        self.assertEqual(result.solver_method, "hybr")
+        self.assertEqual(result.solver_options["maxfev"], 200)
+        self.assertIn("solveResult", result_export)
+        self.assertIn("nodeResults", result_export)
+        self.assertIn("connectionResults", result_export)
 
     def test_run_simulation_for_gui_falls_back_for_missing_boundaries(self) -> None:
         system = create_empty_network()
@@ -95,7 +95,7 @@ class GuiWorkflowHelperTests(unittest.TestCase):
             params={"k": 1000.0, "n": 2.0},
         )
 
-        validation, outcome, snapshot = run_simulation_for_gui(
+        validation, result, result_export = run_simulation_for_gui(
             system,
             solver_name="root",
             solver_method_name="hybr",
@@ -108,11 +108,11 @@ class GuiWorkflowHelperTests(unittest.TestCase):
         )
 
         self.assertFalse(validation.is_valid)
-        self.assertEqual(outcome.execution_mode, "current_state_evaluation")
-        self.assertTrue(outcome.success)
-        self.assertIn("strict policy", outcome.message)
+        self.assertEqual(result.execution_mode, "current_state_evaluation")
+        self.assertTrue(result.success)
+        self.assertIn("strict policy", result.message)
         self.assertGreater(
-            abs(snapshot["connectionResults"]["pipe"]["current_flow_rate"]),
+            abs(result_export["connectionResults"]["pipe"]["flow_rate"]),
             0.0,
         )
 
@@ -129,7 +129,7 @@ class GuiWorkflowHelperTests(unittest.TestCase):
             params={"k": 1000.0, "n": 2.0},
         )
 
-        validation, outcome, snapshot = run_simulation_for_gui(
+        validation, result, result_export = run_simulation_for_gui(
             system,
             solver_name="root",
             solver_method_name="hybr",
@@ -142,13 +142,13 @@ class GuiWorkflowHelperTests(unittest.TestCase):
         )
 
         self.assertTrue(validation.is_valid)
-        self.assertEqual(outcome.execution_mode, "current_state_evaluation")
-        self.assertIn("no unknown-head nodes", outcome.message)
-        self.assertEqual(len(snapshot["solve"]["node_ids"]), 2)
+        self.assertEqual(result.execution_mode, "current_state_evaluation")
+        self.assertIn("no unknown-head nodes", result.message)
+        self.assertEqual(len(result_export["solveResult"]["node_ids"]), 2)
 
-    def test_result_plot_payload_uses_snapshot_data(self) -> None:
+    def test_result_plot_payload_uses_framework_result(self) -> None:
         system = solve_parallel_pipes.build_system()
-        _, _, snapshot = run_simulation_for_gui(
+        _, result, _ = run_simulation_for_gui(
             system,
             solver_name="root",
             solver_method_name="hybr",
@@ -161,12 +161,12 @@ class GuiWorkflowHelperTests(unittest.TestCase):
         )
 
         title, categories, values, y_label = build_result_plot_payload(
-            snapshot,
+            result,
             "connection_flows",
         )
 
-        self.assertEqual(title, "Connection Flow Rates")
-        self.assertEqual(y_label, "Flow Rate Q")
+        self.assertEqual(title, "Connection flow rates")
+        self.assertEqual(y_label, "Flow rate Q")
         self.assertEqual(len(categories), 2)
         self.assertEqual(len(values), 2)
 
@@ -202,7 +202,7 @@ class GuiWorkflowHelperTests(unittest.TestCase):
             params={"k": 1000.0, "n": 2.0},
         )
 
-        validation, outcome, snapshot = run_simulation_for_gui(
+        validation, result, result_export = run_simulation_for_gui(
             system,
             solver_name="root",
             solver_method_name="hybr",
@@ -213,7 +213,7 @@ class GuiWorkflowHelperTests(unittest.TestCase):
             update_nodes=True,
             problem_scale_text="1.0",
         )
-        summary = build_simulation_summary_text(validation, outcome, snapshot)
+        summary = build_simulation_summary_text(validation, result, result_export)
 
         self.assertIn("Mode: Current-state evaluation", summary)
         self.assertIn("Method: hybr", summary)

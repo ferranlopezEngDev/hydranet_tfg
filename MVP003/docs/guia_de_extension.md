@@ -1,31 +1,31 @@
-# Guia de extension
+# Extension Guide
 
-Este documento resume como crecer `MVP003` sin romper la idea central de
-la version: declarar parametros una vez y reutilizar esa declaracion en
-factory, JSON, GUI, tests y documentacion.
+This document summarizes how to grow `MVP003` without breaking the core
+idea of the version: declare parameters once and reuse that declaration
+in the factory, JSON, GUI, tests, and documentation.
 
-## 1. Principios para extender Hydranet
+## 1. Principles for extending Hydranet
 
-Antes de añadir una abstraccion nueva, comprobar:
+Before adding a new abstraction, check:
 
-- si realmente reduce duplicacion futura;
-- si ya hay un patron existente que conviene reaprovechar;
-- si la capa correcta es `hydraulic_solver`, `application` o `gui`;
-- si la extension mantiene la formulacion H-based y la convencion de
-  signos actual.
+- whether it really reduces future duplication;
+- whether there is already an existing pattern worth reusing;
+- whether the correct layer is `hydraulic_solver`, `application`, or `gui`;
+- whether the extension preserves the current H-based formulation and
+  sign convention.
 
-En `MVP003` se prefiere:
+`MVP003` prefers:
 
-- dataclasses y metadatos simples;
-- registros pequenos y explicitos;
-- metodos concretos y legibles;
-- sobre arquitecturas excesivamente genericas.
+- dataclasses and simple metadata;
+- small and explicit registries;
+- concrete and readable methods;
+- over overly generic architectures.
 
-## 2. Añadir un nuevo modelo de conexion
+## 2. Add a new connection model
 
-## Paso 1. Crear la clase
+## Step 1. Create the class
 
-Crear una clase que implemente:
+Create a class that implements:
 
 ```python
 class MyConnection(Connection):
@@ -33,206 +33,204 @@ class MyConnection(Connection):
         ...
 ```
 
-Si el modelo es de tipo tuberia y tiene una ley `h(Q)`, puede heredar de
-`Pipe` e implementar:
+If the model is pipe-like and has an `h(Q)` law, it can inherit from
+`Pipe` and implement:
 
 ```python
 def getHeadVariation(self, flowRate: float) -> float:
     ...
 ```
 
-## Paso 2. Declarar `PARAMETERS`
+## Step 2. Declare `PARAMETERS`
 
-Declarar el schema una sola vez:
+Declare the schema once:
 
 ```python
 PARAMETERS = {
     "myParameter": ParameterSpec(
         name="myParameter",
-        label="Mi parametro",
+        label="My parameter",
         type="float",
         unit="m",
         min_value=0.0,
-        description="Descripcion breve."
+        description="Short description."
     ),
 }
 ```
 
-Recomendaciones:
+Recommendations:
 
-- usar nombres coherentes con el JSON actual si ya existe compatibilidad
-  previa;
-- usar `default` cuando tenga sentido generar formularios o plantillas;
-- marcar como `advanced=True` los parametros numericos poco frecuentes.
+- use names that stay coherent with existing JSON when compatibility already exists;
+- use `default` when it helps generate forms or templates;
+- mark rarely-used numerical parameters as `advanced=True`.
 
-## Paso 3. Validar lo generico y lo especifico
+## Step 3. Validate generic and specific rules
 
-La validacion generica la aporta `ParameterSpec`:
+Generic validation comes from `ParameterSpec`:
 
-- requerido/opcional;
-- tipo;
-- limites;
+- required/optional;
+- type;
+- bounds;
 - choices.
 
-La validacion especifica del modelo sigue viviendo dentro del modelo:
+Model-specific validation should still live inside the model:
 
-- monotonia de una curva;
-- longitudes coherentes entre listas;
-- restricciones fisicas no expresables solo con min/max;
-- relaciones entre varios parametros.
+- curve monotonicity;
+- matching list lengths;
+- physical restrictions not expressible with min/max only;
+- cross-parameter relations.
 
-## Paso 4. Registrar el tipo
+## Step 4. Register the type
 
-Registrar la clase en `factory.py` o en el punto de extension deseado:
+Register the class in `factory.py` or in the chosen extension point:
 
 ```python
 register_connection_type("my_connection", MyConnection)
 ```
 
-Si la clase hereda de `Parameterized`, la factory podra:
+If the class inherits from `Parameterized`, the factory can:
 
-- construirla desde JSON;
-- exportar sus parametros;
-- ofrecer schema y plantilla a la GUI.
+- build it from JSON;
+- export its parameters;
+- offer schema and template data to the GUI.
 
-## Paso 5. Resultados derivados opcionales
+## Step 5. Optional derived results
 
-Si el modelo puede aportar informacion adicional, implementar:
+If the model can expose extra information, implement:
 
 ```python
 def getResultDetails(self, H1, H2, flowRate=None) -> dict[str, object]:
     ...
 ```
 
-Esto permite que `ConnectionResult.extra` exponga datos para GUI y
-exportacion sin duplicar calculos fuera del modelo.
+That allows `ConnectionResult.extra` to expose GUI/export details
+without duplicating calculations outside the model.
 
-## Paso 6. Tests recomendados
+## Step 6. Recommended tests
 
-Como minimo:
+At minimum:
 
-1. test de contrato de signos:
-   - si `H1 > H2`, el flujo esperado sale de nodo 1 hacia nodo 2;
-   - si `H2 > H1`, el flujo cambia de signo;
-   - si `H1 == H2`, el flujo es cero o casi cero.
-2. test de validacion de parametros.
-3. test de registro/factory.
-4. test de round-trip JSON.
-5. test de resultados derivados si expone `extra`.
+1. sign-contract test:
+   - if `H1 > H2`, expected flow goes from node 1 to node 2;
+   - if `H2 > H1`, the flow changes sign;
+   - if `H1 == H2`, the flow is zero or numerically near zero.
+2. parameter-validation test.
+3. registry/factory test.
+4. JSON round-trip test.
+5. derived-result test when `extra` is exposed.
 
-## 3. Añadir un nuevo objeto configurable
+## 3. Add a new configurable object
 
-Si aparece una nueva familia de objetos configurables, por ejemplo:
+If a new family of configurable objects appears, for example:
 
-- bombas;
-- valvulas;
-- opciones de solver;
-- futuros tipos de nodo;
+- pumps;
+- valves;
+- solver options;
+- future node types;
 
-el patron recomendado es:
+the recommended pattern is:
 
-1. heredar o imitar `Parameterized`;
-2. declarar `PARAMETERS`;
-3. implementar `get_parameter_values()`;
-4. implementar `update_parameters(...)` si procede;
-5. reutilizar `validate_parameter_mapping(...)`.
+1. inherit from or imitate `Parameterized`;
+2. declare `PARAMETERS`;
+3. implement `get_parameter_values()`;
+4. implement `update_parameters(...)` when appropriate;
+5. reuse `validate_parameter_mapping(...)`.
 
-La pregunta clave es:
+The key question is:
 
 ```text
-este objeto necesita ser construido, validado, serializado o editado
-desde la GUI de una forma generica?
+does this object need to be built, validated, serialized, or edited
+from the GUI in a generic way?
 ```
 
-Si la respuesta es si, probablemente merece un schema declarativo.
+If the answer is yes, it probably deserves a declarative schema.
 
-## 4. Añadir un nuevo solver
+## 4. Add a new solver
 
-Hay dos niveles posibles.
+There are two possible levels.
 
-## 4.1. Solver de bajo nivel
+## 4.1. Low-level solver
 
-Implementarlo en `src/hydraulic_solver/solvers/` siguiendo el patron:
+Implement it in `src/hydraulic_solver/solvers/` following this pattern:
 
-- recibe `HydraulicSystem`;
-- fija un orden de nodos;
-- construye vector inicial;
-- define callback residual;
-- ejecuta el algoritmo;
-- opcionalmente actualiza nodos;
-- devuelve el resultado bruto necesario.
+- receive `HydraulicSystem`;
+- choose the node ordering;
+- build the initial vector;
+- define the residual callback;
+- execute the nonlinear algorithm;
+- optionally update nodes;
+- return the raw result data needed downstream.
 
-## 4.2. Solver expuesto al framework
+## 4.2. Framework-exposed solver
 
-Si debe formar parte de la API publica:
+If it should become part of the public API:
 
-- normalizar su nombre;
-- añadirlo a la capa `hydranet.solvers`;
-- devolver un `SolveResult`;
-- documentar claramente si muta nodos y que opciones acepta.
+- normalize its public name;
+- add it to `hydranet.solvers`;
+- return a `SolveResult`;
+- document clearly whether it mutates nodes and which options it accepts.
 
-## 4.3. Recomendacion para continuation
+## 4.3. Recommendation for continuation
 
-Para una futura continuation real:
+For a future real continuation solver:
 
-- mantener `problemScale` como parametro de orquestacion;
-- ejecutar una secuencia de escalas;
-- usar la solucion previa como semilla;
-- devolver un `SolveResult` final con trazabilidad suficiente.
+- keep `problemScale` as the orchestration parameter;
+- execute a sequence of scales;
+- use the previous solution as the next initial guess;
+- return one final `SolveResult` with enough traceability.
 
-## 5. Añadir validaciones nuevas
+## 5. Add new validation rules
 
-Preguntarse primero si la validacion es:
+Ask first whether the validation is:
 
-- generica de parametros;
-- topologica de red;
-- fisica de un modelo;
-- numerica/de convergencia.
+- generic parameter validation;
+- network topology validation;
+- model-physics validation;
+- solver numerical/convergence validation.
 
-Ubicacion recomendada:
+Recommended location:
 
-- generica: `parameters.py`;
-- topologica: `systems.py`;
-- fisica de modelo: clase del modelo;
-- numerica de solver: capa de solvers o resultados.
+- generic: `parameters.py`;
+- topology: `systems.py`;
+- model physics: model class;
+- solver numerics: solver or result layer.
 
-## 6. Añadir soporte JSON nuevo
+## 6. Add new JSON support
 
-Antes de cambiar el formato:
+Before changing the format:
 
-1. comprobar si ya se puede expresar con `params` o `parameters`;
-2. comprobar si hay fixtures o GUI que dependan del shape actual;
-3. decidir si se exporta el nuevo formato o solo se acepta como alias;
-4. añadir un test de compatibilidad.
+1. check whether it is already expressible with `params` or `parameters`;
+2. check whether fixtures or the GUI depend on the current shape;
+3. decide whether the new format is exported or only accepted as an alias;
+4. add one compatibility test.
 
-En `MVP003` se prioriza compatibilidad razonable con los casos
-existentes.
+`MVP003` prioritizes reasonable compatibility with existing cases.
 
-## 7. Añadir soporte GUI nuevo
+## 7. Add new GUI support
 
-La GUI deberia preguntar al backend por:
+The GUI should ask the backend for:
 
-- tipos disponibles;
-- schema declarativo;
-- plantilla editable;
-- mensajes de validacion;
-- resultados derivados.
+- available types;
+- declarative schema;
+- editable template;
+- validation messages;
+- derived results.
 
-Evitar:
+Avoid:
 
-- listas de parametros duplicadas en dialogs;
-- validaciones manuales paralelas a las del backend;
-- dependencias directas con SciPy.
+- duplicated parameter lists in dialogs;
+- manual validations that mirror backend validation;
+- direct dependencies on SciPy internals.
 
-## 8. Checklist corto de extensibilidad
+## 8. Short extensibility checklist
 
-Cuando una extension este terminada, comprobar:
+When the extension is done, check:
 
-- modelo o objeto nuevo creado;
-- schema declarado;
-- validacion generica reutilizada;
-- factory/registro integrado;
-- JSON cubierto;
-- GUI potencialmente reutilizable;
-- tests añadidos;
-- documentacion actualizada.
+- new model or object created;
+- schema declared;
+- generic validation reused;
+- factory/registry integrated;
+- JSON covered;
+- GUI potentially reusable;
+- tests added;
+- documentation updated.

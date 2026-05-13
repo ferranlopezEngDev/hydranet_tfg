@@ -1,6 +1,12 @@
 """Application-layer workflows for file I/O, editing, validation, and solving."""
 
 from .errors import ApplicationError, NetworkPersistenceError, SolverSelectionError
+from .forms import (
+    FormField,
+    build_form_fields,
+    parse_form_values,
+    validate_form_values,
+)
 from .interactors import (
     add_connection,
     add_node,
@@ -47,6 +53,10 @@ __all__ = [
     "ApplicationError",
     "NetworkPersistenceError",
     "SolverSelectionError",
+    "FormField",
+    "build_form_fields",
+    "parse_form_values",
+    "validate_form_values",
     "SolverInfo",
     "NetworkSummary",
     "ValidationSummary",

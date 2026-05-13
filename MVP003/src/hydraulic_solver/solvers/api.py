@@ -103,6 +103,7 @@ def solve(
         solver_method=method,
         solver_tolerance=tol,
         solver_options=dict(options or {}),
+        execution_mode="steady_state_solve",
         node_results=node_results,
         connection_results=connection_results,
         raw_result=(raw_result if include_raw_result else None),

@@ -51,8 +51,8 @@ class MainWindow(ttk.Frame):
         subtitle_label = ttk.Label(
             header_frame,
             text=(
-                "Una sola ventana con modos de Editor de redes, Simulaciones y "
-                "Visualizador."
+                "One window that groups network editing, simulation, and result "
+                "inspection on top of the Hydranet framework."
             ),
         )
         subtitle_label.grid(row=1, column=0, sticky="w", pady=(2, 0))
@@ -62,24 +62,29 @@ class MainWindow(ttk.Frame):
 
         ttk.Button(
             toolbar_frame,
-            text="Nueva Red",
+            text="New network",
             command=self._handle_new_network,
         ).grid(row=0, column=0, padx=(0, 6))
         ttk.Button(
             toolbar_frame,
-            text="Abrir JSON",
+            text="Open JSON",
             command=self._handle_open_network,
         ).grid(row=0, column=1, padx=(0, 6))
         ttk.Button(
             toolbar_frame,
-            text="Guardar JSON",
+            text="Save JSON",
             command=self._handle_save_network,
         ).grid(row=0, column=2, padx=(0, 6))
         ttk.Button(
             toolbar_frame,
-            text="Validar",
+            text="Save As",
+            command=self._handle_save_network_as,
+        ).grid(row=0, column=3, padx=(0, 6))
+        ttk.Button(
+            toolbar_frame,
+            text="Validate",
             command=self._handle_validate_network,
-        ).grid(row=0, column=3)
+        ).grid(row=0, column=4)
 
         ttk.Label(header_frame, textvariable=self._solver_var).grid(
             row=2,
@@ -112,9 +117,9 @@ class MainWindow(ttk.Frame):
             on_state_changed=self.refresh,
         )
 
-        self.modeNotebook.add(self.editorPanel, text="Editor de redes")
-        self.modeNotebook.add(self.simulationPanel, text="Simulaciones")
-        self.modeNotebook.add(self.viewerPanel, text="Visualizador")
+        self.modeNotebook.add(self.editorPanel, text="Network editor")
+        self.modeNotebook.add(self.simulationPanel, text="Simulation")
+        self.modeNotebook.add(self.viewerPanel, text="Viewer")
 
     def _build_status_bar(self) -> None:
         """Create the footer status line."""
@@ -142,75 +147,84 @@ class MainWindow(ttk.Frame):
         case_directory = Path(__file__).resolve().parents[2] / "networks" / "cli_cases"
         return str(case_directory)
 
-    def _reset_results(self) -> None:
-        """Clear the current solve-related state when the network changes."""
-        self._state.last_validation = None
-        self._state.last_outcome = None
-        self._state.last_snapshot = None
-        self._state.last_snapshot_path = None
-
     def _handle_new_network(self) -> None:
         """Reset the shell to one empty in-memory network."""
         self._state.system = HydraulicSystem()
         self._state.current_network_path = None
         self._state.selected_node_id = None
         self._state.selected_connection_id = None
-        self._reset_results()
+        self._state.is_dirty = False
+        self._state.clear_results()
         self.refresh()
-        self._set_status("Se ha creado una red vacia nueva")
+        self._set_status("Created one new empty network")
 
     def _handle_open_network(self) -> None:
         """Open one network JSON file into the shared GUI state."""
         path = filedialog.askopenfilename(
             parent=self,
-            title="Abrir red Hydranet",
+            title="Open Hydranet network",
             initialdir=self._get_default_network_directory(),
             filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
         )
-
         if not path:
             return
 
         try:
             self._state.system = load_network(path)
-            self._state.current_network_path = path
             self._state.selected_node_id = None
             self._state.selected_connection_id = None
-            self._reset_results()
+            self._state.clear_results()
+            self._state.mark_clean(current_network_path=path)
         except Exception as exc:
-            messagebox.showerror("Open Failed", str(exc), parent=self)
-            self._set_status(f"No se pudo abrir la red: {exc}")
+            messagebox.showerror("Open failed", str(exc), parent=self)
+            self._set_status(f"Could not open the network: {exc}")
             return
 
         self.refresh()
-        self._set_status(f"Red abierta desde {path}")
+        self._set_status(f"Opened network from {path}")
 
     def _handle_save_network(self) -> None:
-        """Save the current network JSON, asking for a path when needed."""
-        path = self._state.current_network_path
+        """Save the current network JSON, reusing the current path when possible."""
+        self._save_network_to_path(self._state.current_network_path)
 
-        if path is None:
-            path = filedialog.asksaveasfilename(
+    def _handle_save_network_as(self) -> None:
+        """Ask for a new path and save the current network JSON there."""
+        path = filedialog.asksaveasfilename(
+            parent=self,
+            title="Save Hydranet network",
+            initialdir=self._get_default_network_directory(),
+            defaultextension=".json",
+            filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
+        )
+        if not path:
+            return
+
+        self._save_network_to_path(path)
+
+    def _save_network_to_path(self, path: str | None) -> None:
+        """Persist the current network to the requested path."""
+        target_path = path
+        if target_path is None:
+            target_path = filedialog.asksaveasfilename(
                 parent=self,
-                title="Guardar red Hydranet",
+                title="Save Hydranet network",
                 initialdir=self._get_default_network_directory(),
                 defaultextension=".json",
                 filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
             )
-
-            if not path:
+            if not target_path:
                 return
 
         try:
-            save_network(self._state.system, path)
-            self._state.current_network_path = path
+            save_network(self._state.system, target_path)
+            self._state.mark_clean(current_network_path=target_path)
         except Exception as exc:
-            messagebox.showerror("Save Failed", str(exc), parent=self)
-            self._set_status(f"No se pudo guardar la red: {exc}")
+            messagebox.showerror("Save failed", str(exc), parent=self)
+            self._set_status(f"Could not save the network: {exc}")
             return
 
         self.refresh()
-        self._set_status(f"Red guardada en {path}")
+        self._set_status(f"Saved network to {target_path}")
 
     def _handle_validate_network(self) -> None:
         """Validate the current network and report the result to the user."""
@@ -219,19 +233,19 @@ class MainWindow(ttk.Frame):
         self.refresh()
 
         if validation.is_valid:
-            messagebox.showinfo("Topology Valid", validation.message, parent=self)
-            self._set_status("La topologia de la red es valida")
+            messagebox.showinfo("Topology valid", validation.message, parent=self)
+            self._set_status("The network topology is valid")
             return
 
-        messagebox.showwarning("Topology Invalid", validation.message, parent=self)
-        self._set_status(f"Topologia invalida: {validation.message}")
+        messagebox.showwarning("Topology invalid", validation.message, parent=self)
+        self._set_status(f"Invalid topology: {validation.message}")
 
     def _seed_model_visualizer(self, connection_type: str, params_text: str) -> None:
         """Send one connection definition from the editor to the model viewer."""
         self.viewerPanel.seed_model_visualizer(connection_type, params_text)
         self.modeNotebook.select(self.viewerPanel)
         self._set_status(
-            f"Modelo {connection_type} enviado al visualizador de modelos"
+            f"Model {connection_type} sent to the model visualizer"
         )
 
     def _set_status(self, message: str) -> None:
@@ -241,7 +255,12 @@ class MainWindow(ttk.Frame):
 
     def refresh(self) -> None:
         """Refresh all panels from the shared session state."""
-        self._solver_var.set(f"Solver activo: {self._state.active_solver_name}")
+        dirty_label = "yes" if self._state.is_dirty else "no"
+        current_path = self._state.current_network_path or "<unsaved>"
+        self._solver_var.set(
+            f"Active solver: {self._state.active_solver_name} | "
+            f"Dirty: {dirty_label} | File: {current_path}"
+        )
         self._status_var.set(self._state.status_message)
         self.editorPanel.refresh()
         self.simulationPanel.refresh()

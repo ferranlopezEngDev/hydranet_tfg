@@ -70,6 +70,7 @@ class SolveResult:
     solver_method: str | None = None
     solver_tolerance: float | None = None
     solver_options: dict[str, object] = field(default_factory=dict)
+    execution_mode: str = "steady_state_solve"
     node_results: dict[str, NodeResult] = field(default_factory=dict)
     connection_results: dict[str, ConnectionResult] = field(default_factory=dict)
     raw_result: Any | None = None

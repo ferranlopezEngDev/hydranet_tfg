@@ -1,20 +1,20 @@
-# JSON, resultados y GUI
+# JSON, Results, and GUI
 
-Este documento describe el contrato practico entre:
+This document describes the practical contract between:
 
-- el backend del framework;
-- la persistencia JSON;
-- la capa `application`;
-- y la GUI.
+- the framework backend;
+- JSON persistence;
+- the `application` layer;
+- and the GUI.
 
-## 1. Formato JSON de red
+## 1. Network JSON format
 
-La serializacion canónica de una red tiene dos bloques:
+The canonical network serialization has two blocks:
 
 - `nodes`
 - `connections`
 
-Ejemplo:
+Example:
 
 ```json
 {
@@ -46,107 +46,115 @@ Ejemplo:
 }
 ```
 
-## 2. Politica de compatibilidad
+## 2. Compatibility policy
 
-`MVP003` exporta el campo:
+`MVP003` still exports:
 
 ```json
 "params": { ... }
 ```
 
-por compatibilidad con `MVP002`.
+for compatibility with `MVP002`.
 
-Al cargar, tambien acepta:
+When loading, it also accepts:
 
 ```json
 "parameters": { ... }
 ```
 
-La politica actual es:
+The current policy is:
 
-- exportar un formato estable y ya usado por los fixtures;
-- tolerar una variante de entrada mas expresiva;
-- evitar migraciones bruscas innecesarias.
+- export one stable format already used by fixtures;
+- tolerate a more expressive input alias;
+- avoid unnecessary breaking migrations.
 
-## 3. Como se construye el JSON
+## 3. How JSON is built
 
-La informacion sale de:
+The data comes from:
 
-- `Node.get_parameter_values()` cuando aplica;
-- `Connection.get_parameter_values()` cuando la clase es
+- `Node.get_parameter_values()` when applicable;
+- `Connection.get_parameter_values()` when the class is
   `Parameterized`;
-- o serializadores manuales en casos especiales.
+- or manual serializers in special cases.
 
-Esto reduce el numero de lugares donde un modelo debe describir sus
-parametros.
+This reduces the number of places where one model has to describe its
+parameters.
 
-## 4. Que necesita la GUI para editar una red
+## 4. What the GUI needs to edit a network
 
-La GUI puede apoyarse en tres niveles de informacion:
+The GUI can rely on three information levels:
 
-1. tipos registrados:
+1. registered types:
 
 ```python
 list_connection_types()
 ```
 
-2. schema declarativo:
+2. declarative schema:
 
 ```python
 export_connection_parameter_schema("dw_pipe")
 ```
 
-3. plantilla editable:
+3. editable template:
 
 ```python
 get_connection_parameter_template("dw_pipe")
 ```
 
-Con eso puede:
+With that, the GUI can:
 
-- saber que parametros existen;
-- mostrar etiquetas y unidades;
-- rellenar defaults;
-- y evitar hardcodear formularios por tipo.
+- know which parameters exist;
+- show labels and units;
+- fill defaults;
+- avoid hardcoded forms per type.
 
-## 5. Resultado nativo del framework
+In `MVP003`, the primary network editing flow is now:
 
-El backend expone `SolveResult`, que ya contiene:
+```text
+GUI -> backend schema -> dynamic form -> validated object -> system update
+```
 
-- heads por nodo;
-- flows por conexion;
-- residuales por nodo;
-- residual maximo;
-- resultados derivados por nodo;
-- resultados derivados por conexion.
+JSON is kept as a persistence and export format, not as the main editing
+interface.
 
-Esto es el contrato adecuado para una app futura mas desacoplada.
+## 5. Native framework result
 
-## 6. Snapshot de aplicacion
+The backend exposes `SolveResult`, which already contains:
 
-La capa `application` sigue construyendo un snapshot JSON-friendly para
-la GUI actual.
+- node heads;
+- connection flows;
+- nodal residuals;
+- maximum residual magnitude;
+- derived per-node results;
+- derived per-connection results.
 
-Ese snapshot contiene:
+This is the right contract for a future app that should stay decoupled
+from SciPy internals.
 
-- `solver`
+## 6. GUI result export payload
+
+The GUI still prepares one JSON-friendly export payload for saving or
+inspection.
+
+That payload contains:
+
 - `networkSummary`
 - `validation`
-- `solve`
+- `solveResult`
 - `nodeResults`
 - `connectionResults`
 - `networkSpec`
 
-La utilidad del snapshot es que la GUI actual consume:
+Its role is to provide:
 
-- un unico objeto;
-- serializable;
-- exportable;
-- y lo bastante rico para inspeccion y visualizacion.
+- one serializable object;
+- one exportable result document;
+- enough information for inspection and post-processing.
 
-## 7. Resultados por nodo
+## 7. Node-side results
 
-`nodeResults[node_id]` expone, al menos:
+`nodeResults[node_id]` exposes at least:
 
 - `piezometric_head`
 - `pressure_head`
@@ -154,29 +162,29 @@ La utilidad del snapshot es que la GUI actual consume:
 - `external_flow`
 - `is_boundary`
 - `incident_connection_ids`
-- `nodal_balance`
+- `residual`
 
-La GUI no tiene que recalcular:
+The GUI does not need to recompute:
 
-- altura de presion;
-- residual;
-- ni incidencia topologica basica.
+- pressure head;
+- nodal residual;
+- basic topology incidence.
 
-## 8. Resultados por conexion
+## 8. Connection-side results
 
-`connectionResults[connection_id]` expone, al menos:
+`connectionResults[connection_id]` exposes at least:
 
 - `connection_type`
 - `node1_id`
 - `node2_id`
 - `parameters`
-- `current_flow_rate`
+- `flow_rate`
 - `head_difference`
 - `flow_from`
 - `flow_to`
 - `extra`
 
-El bloque `extra` esta pensado para detalles dependientes del modelo:
+The `extra` block is intended for model-specific details such as:
 
 - `headLoss`
 - `meanVelocity`
@@ -184,29 +192,28 @@ El bloque `extra` esta pensado para detalles dependientes del modelo:
 - `frictionFactor`
 - `flowRegime`
 
-No todos los modelos tienen por que aportar todos esos campos.
+Not every model is expected to expose all of them.
 
-## 9. Validacion y mensajes
+## 9. Validation and messages
 
-La GUI deberia mostrar mensajes producidos por backend o application,
-no recrearlos.
+The GUI should display messages produced by the backend or the
+application layer rather than recreating them.
 
-Actualmente la validacion topologica cubre:
+Topology validation currently covers:
 
-- nodos aislados;
-- varias componentes conexas cuando no se permiten;
-- componentes sin nodo frontera;
-- referencias a nodos inexistentes.
+- isolated nodes;
+- multiple connected components when they are not allowed;
+- components without a boundary node;
+- references to missing nodes.
 
-La validacion generica de parametros ya empieza a centralizarse con
+Generic parameter validation is now increasingly centralized through
 `ParameterSpec`.
 
-## 10. Evolucion esperada
+## 10. Expected evolution
 
-La direccion deseada para futuras versiones es:
+The desired direction for future versions is:
 
-- mas formularios realmente generados desde schemas;
-- menos JSON libre escrito a mano en dialogs;
-- mas consumo directo de `SolveResult` y menos dependencia de snapshots
-  heredados;
-- y una frontera aun mas limpia entre framework y GUI.
+- more forms truly generated from schemas;
+- less freehand JSON typed into dialogs;
+- more direct consumption of `SolveResult`;
+- an even cleaner boundary between the framework and the GUI.

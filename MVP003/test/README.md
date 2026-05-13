@@ -1,20 +1,20 @@
 # `test`
 
-Esta carpeta contiene la capa principal de regresion de `MVP003`.
+This folder contains the main regression layer for `MVP003`.
 
-## Cobertura
+## Coverage
 
-- formulas y modelos hidraulicos;
-- factory y serializacion JSON;
-- ejemplos de sistemas montados;
-- capa `application`;
-- GUI y plotting en modo smoke;
-- metadata declarativa de parametros;
-- `SolveResult` y API publica de framework;
-- indice de conexiones incidentes;
-- casos de estres reproducibles.
+- hydraulic formulas and models;
+- factory and JSON serialization;
+- assembled-system examples;
+- `application` layer behavior;
+- GUI and plotting smoke tests;
+- declarative parameter metadata;
+- `SolveResult` and the public framework API;
+- incident-connection index behavior;
+- reproducible stress cases.
 
-## Comandos
+## Commands
 
 ```bash
 python -m unittest discover -s test -p 'test_*.py'
@@ -23,12 +23,12 @@ python -m test.systems_testing.solve_parallel_pipes
 python src/gui_app.py
 ```
 
-## Subcarpetas utiles
+## Useful subfolders
 
-- `pipe_model_testing/`: comprobaciones visuales de leyes elementales.
-- `systems_testing/`: comprobaciones ejecutables de redes ensambladas.
+- `pipe_model_testing/`: visual checks for elementary laws.
+- `systems_testing/`: executable checks for assembled networks.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Guia de extension](../docs/guia_de_extension.md)
-- [Fundamentos fisicos y matematicos](../docs/fundamentos_fisicos_y_matematicos.md)
+- [Extension guide](../docs/guia_de_extension.md)
+- [Physical and mathematical foundations](../docs/fundamentos_fisicos_y_matematicos.md)

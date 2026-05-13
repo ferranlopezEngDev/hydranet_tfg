@@ -1,73 +1,73 @@
-MVP003 - INSTALACION Y PUESTA EN MARCHA
-======================================
+MVP003 - INSTALLATION AND QUICK START
+=====================================
 
-Este archivo describe la instalacion del pack `MVP003`.
+This file describes how to install the `MVP003` package.
 
-REQUISITOS PREVIOS
-------------------
-- Python 3.11 o superior.
-- Acceso a Internet para instalar dependencias desde `requirements.txt`.
-- Soporte `tkinter`.
+PREREQUISITES
+-------------
+- Python 3.11 or newer.
+- Internet access to install dependencies from `requirements.txt`.
+- `tkinter` support.
 
-Nota para Linux:
-- en algunas distribuciones `tkinter` hay que instalarlo aparte.
-  Ejemplo Debian/Ubuntu:
+Linux note:
+- on some distributions, `tkinter` must be installed separately.
+  Debian/Ubuntu example:
 
      sudo apt install python3-tk
 
 
-INSTALACION RAPIDA EN LINUX / MACOS
------------------------------------
-1. Entrar en la carpeta `MVP003`.
-2. Ejecutar:
+QUICK INSTALL ON LINUX / MACOS
+------------------------------
+1. Enter the `MVP003` folder.
+2. Run:
 
    bash install.sh
 
-3. Lanzar la GUI:
+3. Launch the GUI:
 
    bash run.sh
 
-Tambien se puede activar el entorno manualmente:
+You can also activate the environment manually:
 
    source .venv/bin/activate
-   python src/main.py
+   python src/gui_app.py
 
 
-INSTALACION RAPIDA EN WINDOWS
------------------------------
-1. Abrir PowerShell o `cmd` dentro de la carpeta `MVP003`.
-2. Ejecutar:
+QUICK INSTALL ON WINDOWS
+------------------------
+1. Open PowerShell or `cmd` inside the `MVP003` folder.
+2. Run:
 
    install_windows.cmd
 
-3. Lanzar la GUI:
+3. Launch the GUI:
 
    run_windows.cmd
 
 
-INSTALACION MANUAL
-------------------
-1. Entrar en `MVP003`.
-2. Crear el entorno virtual.
-3. Activarlo.
-4. Instalar dependencias:
+MANUAL INSTALLATION
+-------------------
+1. Enter `MVP003`.
+2. Create the virtual environment.
+3. Activate it.
+4. Install dependencies:
 
    python -m pip install --upgrade pip setuptools wheel
    python -m pip install -r requirements.txt
 
-5. Lanzar la GUI:
+5. Launch the GUI:
 
-   python src/main.py
+   python src/gui_app.py
 
 
-COMPROBACION OPCIONAL
+OPTIONAL VERIFICATION
 ---------------------
-Verificacion rapida:
+Quick verification:
 
-   python -m unittest discover -s test -p test_*.py
+   python -m unittest discover -s test -p 'test_*.py'
    python -m compileall hydranet src test
 
-Los instaladores tambien soportan verificacion completa:
+The installers also support full verification:
 
 - Linux / macOS:
 
@@ -78,8 +78,8 @@ Los instaladores tambien soportan verificacion completa:
      install_windows.cmd -RunChecks
 
 
-ARCHIVOS CLAVE
---------------
+KEY FILES
+---------
 - `README.md`
 - `GUIA_MVP003.md`
 - `docs/`
@@ -89,16 +89,16 @@ ARCHIVOS CLAVE
 - `requirements.txt`
 
 
-LECTURA RECOMENDADA TRAS INSTALAR
----------------------------------
+RECOMMENDED READING AFTER INSTALLING
+------------------------------------
 - `README.md`
 - `docs/README.md`
 - `docs/fundamentos_fisicos_y_matematicos.md`
 - `docs/arquitectura_e_implementacion.md`
 
 
-NOTAS
+NOTES
 -----
-- La API publica recomendada del framework es `hydranet/`.
-- La GUI actual sigue viviendo sobre `src/application/` y `src/gui/`.
-- Los casos de estres JSON se generan bajo demanda y no se versionan.
+- The recommended public framework API is `hydranet/`.
+- The current GUI still lives on top of `src/application/` and `src/gui/`.
+- Stress-case JSON files are generated on demand and are not versioned.

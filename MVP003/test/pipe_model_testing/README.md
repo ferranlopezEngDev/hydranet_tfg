@@ -1,18 +1,18 @@
 # `test/pipe_model_testing`
 
-Esta carpeta contiene scripts manuales para inspeccionar leyes
-elementales de conexiones y tuberias.
+This folder contains manual scripts used to inspect elementary pipe and
+connection laws.
 
-## Para que sirven
+## What they are for
 
-Son utiles para comprobar visualmente:
+They are useful to visually check:
 
-- la forma de `h(Q)`;
-- la inversion `Q(H2 - H1)`;
-- la coherencia de signos;
-- la calidad de una aproximacion frente a un modelo de referencia.
+- the shape of `h(Q)`;
+- the inverse `Q(H2 - H1)`;
+- sign consistency;
+- the quality of one approximation against one reference model.
 
-## Comandos tipicos
+## Typical commands
 
 ```bash
 python -m test.pipe_model_testing.plot_darcy_weisbach_friction_factor
@@ -22,21 +22,21 @@ python -m test.pipe_model_testing.plot_kqn_pipe_flow_rate_vs_head_difference
 python -m test.pipe_model_testing.plot_kqn_vs_fixed_kqn_regression
 ```
 
-## Cuando usar esta carpeta
+## When to use this folder
 
-Usala cuando quieras validar una ley local o un modelo de conexion
-aislado.
+Use it when you want to validate one local law or one isolated
+connection model.
 
-Si lo que quieres comprobar es:
+If what you want to check is:
 
-- balance nodal;
-- topologia;
-- solve de red completa;
-- o coherencia de residuals;
+- nodal balance;
+- topology;
+- full-network solve;
+- or residual consistency;
 
-entonces la carpeta adecuada es `systems_testing/`.
+then the appropriate folder is `systems_testing/`.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Fundamentos fisicos y matematicos](../../docs/fundamentos_fisicos_y_matematicos.md)
-- [Guia de extension](../../docs/guia_de_extension.md)
+- [Physical and mathematical foundations](../../docs/fundamentos_fisicos_y_matematicos.md)
+- [Extension guide](../../docs/guia_de_extension.md)

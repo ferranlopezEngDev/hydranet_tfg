@@ -83,44 +83,44 @@ ROOT_METHOD_OPTION_TEMPLATES: dict[str, dict[str, object]] = {
 }
 ROOT_METHOD_HELP_TEXTS: dict[str, str] = {
     "hybr": (
-        "Metodo Powell hybr de MINPACK. Suele ser la mejor opcion general "
-        "para redes pequenas y medianas con buen punto inicial."
+        "MINPACK Powell hybr method. It is usually the best general option for "
+        "small and medium networks with a good initial guess."
     ),
     "lm": (
-        "Levenberg-Marquardt en formulacion de minimos cuadrados. Puede ser "
-        "util cuando interesa robustez frente a residuales mal escalados."
+        "Levenberg-Marquardt in least-squares form. It can be useful when "
+        "extra robustness is needed against badly scaled residuals."
     ),
     "broyden1": (
-        "Metodo cuasi-Newton tipo Broyden (bueno). Evita Jacobiano explicito "
-        "y permite controlar iteraciones y busqueda lineal."
+        "Broyden's first quasi-Newton method. It avoids an explicit Jacobian "
+        "and exposes iteration and line-search controls."
     ),
     "broyden2": (
-        "Variante alternativa de Broyden. Puede ser util para comparar "
-        "convergencia cuando `broyden1` no se comporta bien."
+        "Alternative Broyden variant. It can help compare convergence when "
+        "`broyden1` does not behave well."
     ),
     "anderson": (
-        "Aceleracion de Anderson para iteraciones fijas. Interesante en "
-        "problemas grandes o cuando se busca experimentar con memoria M."
+        "Anderson acceleration for fixed-point iterations. Interesting for "
+        "larger problems or when experimenting with memory parameter M."
     ),
     "linearmixing": (
-        "Mezcla lineal simple. Metodo basico y normalmente mas experimental "
-        "que `hybr` o `lm`."
+        "Simple linear mixing. A basic method and usually more experimental "
+        "than `hybr` or `lm`."
     ),
     "diagbroyden": (
-        "Aproximacion diagonal del Jacobiano. Ligero, pero menos robusto "
-        "en redes fuertemente acopladas."
+        "Diagonal Jacobian approximation. Lightweight, but less robust on "
+        "strongly coupled networks."
     ),
     "excitingmixing": (
-        "Variante de mezcla diagonal con acotacion interna. Mas propia de "
-        "casos experimentales que de uso general."
+        "Diagonal mixing variant with internal damping. More suitable for "
+        "experimental cases than for general-purpose use."
     ),
     "krylov": (
-        "Metodo de Krylov para aproximar el Jacobiano. Prometedor para "
-        "problemas grandes; suele requerir mas afinado de opciones."
+        "Krylov method used to approximate the Jacobian. Promising for larger "
+        "problems, but it usually needs more option tuning."
     ),
     "df-sane": (
-        "Metodo espectral residual sin gradiente. Puede ayudar cuando otros "
-        "metodos tienen dificultades con Jacobianos numericos."
+        "Gradient-free spectral residual method. It can help when other "
+        "methods struggle with numerical Jacobians."
     ),
 }
 

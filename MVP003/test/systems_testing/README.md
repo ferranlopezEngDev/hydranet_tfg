@@ -1,18 +1,18 @@
 # `test/systems_testing`
 
-Esta carpeta contiene scripts ejecutables de comprobacion a nivel de
-red ensamblada.
+This folder contains executable scripts used for assembled-network
+checks.
 
-## Que comprueban
+## What they check
 
-- montaje de `HydraulicSystem`;
-- validacion topologica;
-- solve estacionario;
-- balance nodal;
-- caudales por conexion;
-- coherencia con resultados teoricos o de referencia.
+- `HydraulicSystem` assembly;
+- topology validation;
+- steady-state solve;
+- nodal balance;
+- connection flows;
+- consistency with theoretical or reference results.
 
-## Comandos tipicos
+## Typical commands
 
 ```bash
 python -m test.systems_testing.solve_parallel_pipes
@@ -21,17 +21,17 @@ python -m test.systems_testing.solve_single_kqn_pipe
 python -m test.systems_testing.solve_three_reservoirs
 ```
 
-## Papel dentro del proyecto
+## Role inside the project
 
-Estos scripts ocupan un punto intermedio entre:
+These scripts sit between:
 
-- test automatico de regresion;
-- ejemplo didactico;
-- y comprobacion ingenieril manual.
+- automated regression tests;
+- didactic examples;
+- and manual engineering checks.
 
-Son especialmente utiles para documentar casos de referencia del TFG.
+They are especially useful to document thesis reference cases.
 
-## Documentacion relacionada
+## Related documentation
 
-- [Fundamentos fisicos y matematicos](../../docs/fundamentos_fisicos_y_matematicos.md)
-- [Arquitectura e implementacion](../../docs/arquitectura_e_implementacion.md)
+- [Physical and mathematical foundations](../../docs/fundamentos_fisicos_y_matematicos.md)
+- [Architecture and implementation](../../docs/arquitectura_e_implementacion.md)

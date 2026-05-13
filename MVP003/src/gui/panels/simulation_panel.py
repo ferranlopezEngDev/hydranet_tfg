@@ -1,25 +1,25 @@
-"""Simulation mode for running registered solvers and exporting snapshots."""
+"""Simulation mode for running registered solvers and exporting results."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from collections.abc import Callable
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-
-from src.application import save_result_snapshot
 
 from ..state import GuiSessionState
 from ..tooltips import attach_tooltip
 from ..workflows import (
     build_network_overview_text,
+    build_result_export_text,
     build_simulation_summary_text,
-    build_snapshot_text,
+    format_json,
     get_registered_solver_default_method,
     get_registered_solver_method_help_text,
     get_registered_solver_method_options_template_text,
     get_solver_configuration_help_text,
-    list_registered_solver_names,
     list_registered_solver_methods,
+    list_registered_solver_names,
     run_simulation_for_gui,
 )
 
@@ -58,14 +58,14 @@ class SimulationPanel(ttk.Frame):
         self._build_outputs()
 
     def _build_network_summary(self) -> None:
-        frame = ttk.LabelFrame(self, text="Red Actual", padding=10)
+        frame = ttk.LabelFrame(self, text="Current network", padding=10)
         frame.grid(row=0, column=0, sticky="ew", pady=(0, 10))
         frame.columnconfigure(0, weight=1)
         self.networkSummaryText = tk.Text(frame, height=7, wrap="word", state="disabled")
         self.networkSummaryText.grid(row=0, column=0, sticky="ew")
 
     def _build_controls(self) -> None:
-        frame = ttk.LabelFrame(self, text="Configuracion de Simulacion", padding=10)
+        frame = ttk.LabelFrame(self, text="Simulation configuration", padding=10)
         frame.grid(row=1, column=0, sticky="ew", pady=(0, 10))
         frame.columnconfigure(1, weight=1)
         frame.columnconfigure(3, weight=1)
@@ -114,7 +114,7 @@ class SimulationPanel(ttk.Frame):
             pady=4,
         )
 
-        ttk.Label(frame, text="Initial Heads").grid(row=2, column=0, sticky="w", pady=4)
+        ttk.Label(frame, text="Initial heads").grid(row=2, column=0, sticky="w", pady=4)
         self.initialHeadsEntry = ttk.Entry(frame, textvariable=self.initialHeadsVar)
         self.initialHeadsEntry.grid(
             row=2,
@@ -124,7 +124,7 @@ class SimulationPanel(ttk.Frame):
             padx=(0, 12),
         )
 
-        ttk.Label(frame, text="Problem Scale").grid(row=2, column=2, sticky="w", pady=4)
+        ttk.Label(frame, text="Problem scale").grid(row=2, column=2, sticky="w", pady=4)
         self.problemScaleEntry = ttk.Entry(frame, textvariable=self.problemScaleVar)
         self.problemScaleEntry.grid(
             row=2,
@@ -133,7 +133,7 @@ class SimulationPanel(ttk.Frame):
             pady=4,
         )
 
-        ttk.Label(frame, text="Advanced Options (JSON)").grid(
+        ttk.Label(frame, text="Advanced options (JSON)").grid(
             row=3,
             column=0,
             sticky="nw",
@@ -159,24 +159,23 @@ class SimulationPanel(ttk.Frame):
 
         ttk.Checkbutton(
             frame,
-            text="Actualizar nodos del sistema",
+            text="Update node objects in the system",
             variable=self.updateNodesVar,
         ).grid(row=4, column=0, columnspan=2, sticky="w", pady=6)
         ttk.Button(
             frame,
-            text="Cargar JSON Predeterminado",
+            text="Load default JSON",
             command=self._handle_load_default_solver_options,
         ).grid(row=4, column=2, columnspan=2, sticky="e", pady=6)
 
         ttk.Label(
             frame,
             text=(
-                "Metodo y tolerancia configuran `scipy.optimize.root(...)`. "
-                "Las opciones avanzadas se introducen como un JSON del campo "
-                "`options` de SciPy. Si la red no es resoluble con la politica "
-                "estricta actual, "
-                "la app generara igualmente una evaluacion usando los heads "
-                "guardados en los nodos para poder inspeccionar caudales."
+                "Method and tolerance configure `scipy.optimize.root(...)`. "
+                "Advanced options are entered as one JSON object for SciPy's "
+                "`options` mapping. If the network cannot be solved under the "
+                "strict topology policy, the app still generates a current-state "
+                "evaluation using the node heads already stored in memory."
             ),
             wraplength=620,
             justify=tk.LEFT,
@@ -186,18 +185,18 @@ class SimulationPanel(ttk.Frame):
         button_frame.grid(row=6, column=2, columnspan=2, sticky="e")
         ttk.Button(
             button_frame,
-            text="Ayuda",
+            text="Help",
             command=self._show_solver_configuration_help,
         ).grid(row=0, column=0, padx=(0, 6))
         ttk.Button(
             button_frame,
-            text="Resolver",
+            text="Solve",
             command=self._handle_run_simulation,
         ).grid(row=0, column=1, padx=(0, 6))
         ttk.Button(
             button_frame,
-            text="Exportar Snapshot",
-            command=self._handle_export_snapshot,
+            text="Export result JSON",
+            command=self._handle_export_result,
         ).grid(row=0, column=2)
 
         self._install_tooltips()
@@ -213,29 +212,29 @@ class SimulationPanel(ttk.Frame):
         )
         attach_tooltip(
             self.solverToleranceEntry,
-            "Valor opcional para `tol` en `scipy.optimize.root(...)`. Si se deja "
-            "vacio, SciPy usa su comportamiento por defecto.",
+            "Optional value for `tol` in `scipy.optimize.root(...)`. If left empty, "
+            "SciPy uses its default behavior.",
         )
         attach_tooltip(
             self.solverOptionsText,
-            "JSON avanzado enviado como `options` a `scipy.optimize.root(...)`. "
-            "Usa el boton de JSON predeterminado para cargar una plantilla "
-            "recomendada para el metodo actual.",
+            "Advanced JSON forwarded as `options` to `scipy.optimize.root(...)`. "
+            "Use the default JSON button to load one recommended template for the "
+            "current method.",
         )
         attach_tooltip(
             self.initialHeadsEntry,
-            "Semilla inicial opcional para los nodos desconocidos, en el mismo "
-            "orden que `Node IDs` si ese campo se usa.",
+            "Optional initial guess for the unknown-head nodes, in the same order "
+            "as `Node IDs` when that field is used.",
         )
         attach_tooltip(
             self.nodeIdsEntry,
-            "Lista opcional separada por comas para fijar el subconjunto y orden "
-            "de nodos desconocidos que se resuelven.",
+            "Optional comma-separated list that fixes the subset and order of the "
+            "unknown-head nodes to solve.",
         )
         attach_tooltip(
             self.problemScaleEntry,
-            "Escala del problema. `1.0` es el problema real; valores menores "
-            "pueden ayudar en estrategias de continuacion.",
+            "Problem scaling factor. `1.0` is the real problem; smaller values can "
+            "help continuation-style workflows.",
         )
 
     def _get_current_method_help_text(self) -> str:
@@ -273,8 +272,8 @@ class SimulationPanel(ttk.Frame):
     def _show_solver_configuration_help(self) -> None:
         method_help = self._get_current_method_help_text()
         messagebox.showinfo(
-            "Ayuda del Solver",
-            f"{get_solver_configuration_help_text()}\n\nMetodo actual:\n- {method_help}",
+            "Solver help",
+            f"{get_solver_configuration_help_text()}\n\nCurrent method:\n- {method_help}",
             parent=self,
         )
 
@@ -282,7 +281,7 @@ class SimulationPanel(ttk.Frame):
         outputs = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
         outputs.grid(row=2, column=0, sticky="nsew")
 
-        summary_frame = ttk.LabelFrame(outputs, text="Resumen de Simulacion", padding=8)
+        summary_frame = ttk.LabelFrame(outputs, text="Simulation summary", padding=8)
         summary_frame.columnconfigure(0, weight=1)
         summary_frame.rowconfigure(0, weight=1)
         self.solveSummaryText = tk.Text(
@@ -292,22 +291,22 @@ class SimulationPanel(ttk.Frame):
         )
         self.solveSummaryText.grid(row=0, column=0, sticky="nsew")
 
-        snapshot_frame = ttk.LabelFrame(outputs, text="Snapshot JSON", padding=8)
-        snapshot_frame.columnconfigure(0, weight=1)
-        snapshot_frame.rowconfigure(0, weight=1)
+        export_frame = ttk.LabelFrame(outputs, text="Result export JSON", padding=8)
+        export_frame.columnconfigure(0, weight=1)
+        export_frame.rowconfigure(0, weight=1)
         self.snapshotText = tk.Text(
-            snapshot_frame,
+            export_frame,
             wrap="none",
             state="disabled",
         )
         self.snapshotText.grid(row=0, column=0, sticky="nsew")
 
         outputs.add(summary_frame, weight=2)
-        outputs.add(snapshot_frame, weight=3)
+        outputs.add(export_frame, weight=3)
 
     def _handle_run_simulation(self) -> None:
         try:
-            validation, outcome, snapshot = run_simulation_for_gui(
+            validation, result, result_export = run_simulation_for_gui(
                 self._state.system,
                 solver_name=self.solverVar.get().strip(),
                 solver_method_name=self.solverMethodVar.get().strip(),
@@ -319,8 +318,8 @@ class SimulationPanel(ttk.Frame):
                 problem_scale_text=self.problemScaleVar.get().strip(),
             )
         except Exception as exc:
-            messagebox.showerror("Simulation Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo resolver la red: {exc}")
+            messagebox.showerror("Simulation failed", str(exc), parent=self)
+            self._on_status(f"Could not solve the network: {exc}")
             return
 
         self._state.active_solver_name = self.solverVar.get().strip()
@@ -331,49 +330,47 @@ class SimulationPanel(ttk.Frame):
             tk.END,
         ).strip()
         self._state.last_validation = validation
-        self._state.last_outcome = outcome
-        self._state.last_snapshot = snapshot
+        self._state.last_solve_result = result
+        self._state.last_result_export = result_export
         self._on_state_changed()
-        if outcome.execution_mode == "current_state_evaluation":
-            self._on_status("Evaluacion de caudales generada con los heads actuales")
+        if result.execution_mode == "current_state_evaluation":
+            self._on_status("Current-state flow evaluation generated from stored heads")
         else:
             self._on_status(
-                f"Simulacion ejecutada con solver {self._state.active_solver_name}"
+                f"Simulation executed with solver {self._state.active_solver_name}"
             )
 
-    def _handle_export_snapshot(self) -> None:
-        if self._state.last_outcome is None:
+    def _handle_export_result(self) -> None:
+        if self._state.last_result_export is None:
             messagebox.showinfo(
-                "Export Snapshot",
-                "Todavia no hay resultados de simulacion para exportar.",
+                "Export result JSON",
+                "No simulation results are available yet.",
                 parent=self,
             )
             return
 
-        snapshot_path = filedialog.asksaveasfilename(
+        export_path = filedialog.asksaveasfilename(
             parent=self,
-            title="Guardar snapshot de resultados",
+            title="Save result export JSON",
             defaultextension=".json",
             filetypes=(("JSON files", "*.json"), ("All files", "*.*")),
         )
-
-        if not snapshot_path:
+        if not export_path:
             return
 
         try:
-            save_result_snapshot(
-                self._state.system,
-                self._state.last_outcome,
-                snapshot_path,
+            Path(export_path).write_text(
+                format_json(self._state.last_result_export) + "\n",
+                encoding="utf-8",
             )
-            self._state.last_snapshot_path = snapshot_path
+            self._state.last_result_export_path = export_path
         except Exception as exc:
-            messagebox.showerror("Export Failed", str(exc), parent=self)
-            self._on_status(f"No se pudo exportar el snapshot: {exc}")
+            messagebox.showerror("Export failed", str(exc), parent=self)
+            self._on_status(f"Could not export the result JSON: {exc}")
             return
 
         self._on_state_changed()
-        self._on_status(f"Snapshot guardado en {snapshot_path}")
+        self._on_status(f"Result JSON exported to {export_path}")
 
     def _set_text(self, widget: tk.Text, text: str) -> None:
         widget.configure(state="normal")
@@ -417,8 +414,11 @@ class SimulationPanel(ttk.Frame):
             self.solveSummaryText,
             build_simulation_summary_text(
                 self._state.last_validation,
-                self._state.last_outcome,
-                self._state.last_snapshot,
+                self._state.last_solve_result,
+                self._state.last_result_export,
             ),
         )
-        self._set_text(self.snapshotText, build_snapshot_text(self._state.last_snapshot))
+        self._set_text(
+            self.snapshotText,
+            build_result_export_text(self._state.last_result_export),
+        )
