@@ -1,0 +1,38 @@
+{
+  "nodes": {
+    "source": {
+      "piezometricHead": 100.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "demand": {
+      "piezometricHead": 90.0,
+      "elevation": 0.0,
+      "externalFlow": 0.12,
+      "isBoundary": false
+    }
+  },
+  "connections": {
+    "parallel_pipe_1": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 1469.0,
+        "n": 1.974,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "source",
+      "node2Id": "demand"
+    },
+    "parallel_pipe_2": {
+      "type": "fixed_kqn_pipe",
+      "params": {
+        "k": 2432.0,
+        "n": 1.927,
+        "headTolerance": 1e-12
+      },
+      "node1Id": "source",
+      "node2Id": "demand"
+    }
+  }
+}

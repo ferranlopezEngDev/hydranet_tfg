@@ -1,0 +1,104 @@
+MVP003 - INSTALACION Y PUESTA EN MARCHA
+======================================
+
+Este archivo describe la instalacion del pack `MVP003`.
+
+REQUISITOS PREVIOS
+------------------
+- Python 3.11 o superior.
+- Acceso a Internet para instalar dependencias desde `requirements.txt`.
+- Soporte `tkinter`.
+
+Nota para Linux:
+- en algunas distribuciones `tkinter` hay que instalarlo aparte.
+  Ejemplo Debian/Ubuntu:
+
+     sudo apt install python3-tk
+
+
+INSTALACION RAPIDA EN LINUX / MACOS
+-----------------------------------
+1. Entrar en la carpeta `MVP003`.
+2. Ejecutar:
+
+   bash install.sh
+
+3. Lanzar la GUI:
+
+   bash run.sh
+
+Tambien se puede activar el entorno manualmente:
+
+   source .venv/bin/activate
+   python src/main.py
+
+
+INSTALACION RAPIDA EN WINDOWS
+-----------------------------
+1. Abrir PowerShell o `cmd` dentro de la carpeta `MVP003`.
+2. Ejecutar:
+
+   install_windows.cmd
+
+3. Lanzar la GUI:
+
+   run_windows.cmd
+
+
+INSTALACION MANUAL
+------------------
+1. Entrar en `MVP003`.
+2. Crear el entorno virtual.
+3. Activarlo.
+4. Instalar dependencias:
+
+   python -m pip install --upgrade pip setuptools wheel
+   python -m pip install -r requirements.txt
+
+5. Lanzar la GUI:
+
+   python src/main.py
+
+
+COMPROBACION OPCIONAL
+---------------------
+Verificacion rapida:
+
+   python -m unittest discover -s test -p test_*.py
+   python -m compileall hydranet src test
+
+Los instaladores tambien soportan verificacion completa:
+
+- Linux / macOS:
+
+     RUN_CHECKS=1 bash install.sh
+
+- Windows:
+
+     install_windows.cmd -RunChecks
+
+
+ARCHIVOS CLAVE
+--------------
+- `README.md`
+- `GUIA_MVP003.md`
+- `docs/`
+- `install.sh`
+- `install_windows.cmd`
+- `run.sh`
+- `requirements.txt`
+
+
+LECTURA RECOMENDADA TRAS INSTALAR
+---------------------------------
+- `README.md`
+- `docs/README.md`
+- `docs/fundamentos_fisicos_y_matematicos.md`
+- `docs/arquitectura_e_implementacion.md`
+
+
+NOTAS
+-----
+- La API publica recomendada del framework es `hydranet/`.
+- La GUI actual sigue viviendo sobre `src/application/` y `src/gui/`.
+- Los casos de estres JSON se generan bajo demanda y no se versionan.

@@ -136,3 +136,6 @@ coverage/
 !MVP002/networks/stress_cases/*.py
 # Ignore all JSON files (generated data)
 MVP002/networks/stress_cases/*.json
+!MVP003/networks/stress_cases/*.py
+MVP003/networks/stress_cases/*.json
+MVP003/benchmarks/output/

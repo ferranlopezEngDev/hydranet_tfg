@@ -1,0 +1,32 @@
+{
+  "nodes": {
+    "source": {
+      "piezometricHead": 100.0,
+      "elevation": 0.0,
+      "externalFlow": 0.0,
+      "isBoundary": true
+    },
+    "demand": {
+      "piezometricHead": 99.0,
+      "elevation": 0.0,
+      "externalFlow": 0.01,
+      "isBoundary": false
+    }
+  },
+  "connections": {
+    "pipe_1": {
+      "type": "factor_polynomial",
+      "params": {
+        "constantCoefficient": 0.0,
+        "coefficients": [
+          -0.01
+        ],
+        "exponents": [
+          1.0
+        ]
+      },
+      "node1Id": "source",
+      "node2Id": "demand"
+    }
+  }
+}
