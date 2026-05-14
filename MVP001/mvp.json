@@ -1,0 +1,26 @@
+{
+  "name": "MVP001",
+  "display_name": "Hydranet MVP001",
+  "description": "CLI-first hydraulic solver MVP with JSON persistence and interactive menu workflows.",
+  "kind": "cli",
+  "python_min": "Python 3 (tested on 3.13.5)",
+  "documents": [
+    "README.md",
+    "INSTALL.txt",
+    "GUIA_MVP001.txt"
+  ],
+  "commands": {
+    "install": {
+      "posix": ["bash", "install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd"]
+    },
+    "run": {
+      "posix": ["{venv_python}", "src/app_cli.py"],
+      "windows": ["{venv_python}", "src\\app_cli.py"]
+    },
+    "test": {
+      "posix": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"],
+      "windows": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"]
+    }
+  }
+}

@@ -2,6 +2,31 @@
 
 This repository now acts as a container for versioned project layouts.
 
+## MVP Manager
+
+You can now manage the versioned MVPs from the repository root:
+
+```bash
+python3 mvp.py list
+python3 mvp.py info latest
+python3 mvp.py install MVP001
+python3 mvp.py run MVP002
+python3 mvp.py test MVP003
+python3 mvp.py clean
+```
+
+On Windows the equivalent launcher is typically `py mvp.py ...`.
+
+The manager discovers every top-level `MVPxxx/` folder that ships a
+`mvp.json` manifest, so future versions can join the workflow without
+changing the tool itself.
+
+Workspace-level documentation now lives in:
+
+- [Workspace Docs](docs/README.md)
+- [MVP Manager Guide](docs/mvp_manager.md)
+- [How To Create A New MVP](docs/creating_a_new_mvp.md)
+
 ## Current Versions
 
 - [MVP001](MVP001/README.md): first hydraulic solver MVP with JSON

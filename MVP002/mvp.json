@@ -1,0 +1,31 @@
+{
+  "name": "MVP002",
+  "display_name": "Hydranet MVP002",
+  "description": "First GUI-oriented MVP built on top of the original hydraulic kernel and app workflows.",
+  "kind": "gui",
+  "python_min": "Python 3.11+",
+  "documents": [
+    "README.md",
+    "INSTALL.txt",
+    "GUIA_MVP002.txt",
+    "README_PENDING.md"
+  ],
+  "commands": {
+    "install": {
+      "posix": ["bash", "install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd"]
+    },
+    "install_checks": {
+      "posix": ["bash", "-lc", "RUN_CHECKS=1 bash install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd", "-RunChecks"]
+    },
+    "run": {
+      "posix": ["bash", "run.sh"],
+      "windows": ["cmd", "/c", "run_windows.cmd"]
+    },
+    "test": {
+      "posix": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"],
+      "windows": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"]
+    }
+  }
+}

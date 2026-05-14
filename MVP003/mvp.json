@@ -1,0 +1,32 @@
+{
+  "name": "MVP003",
+  "display_name": "Hydranet MVP003",
+  "description": "Current framework-first MVP with the public hydranet API plus the desktop GUI layer.",
+  "kind": "framework + gui",
+  "python_min": "Python 3.11+",
+  "documents": [
+    "README.md",
+    "INSTALL.txt",
+    "GUIA_MVP003.md",
+    "docs/README.md",
+    "README_PENDING.md"
+  ],
+  "commands": {
+    "install": {
+      "posix": ["bash", "install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd"]
+    },
+    "install_checks": {
+      "posix": ["bash", "-lc", "RUN_CHECKS=1 bash install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd", "-RunChecks"]
+    },
+    "run": {
+      "posix": ["bash", "run.sh"],
+      "windows": ["cmd", "/c", "run_windows.cmd"]
+    },
+    "test": {
+      "posix": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"],
+      "windows": ["{venv_python}", "-m", "unittest", "discover", "-s", "test", "-p", "test_*.py"]
+    }
+  }
+}
