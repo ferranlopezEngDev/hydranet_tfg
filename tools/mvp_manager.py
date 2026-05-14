@@ -351,11 +351,12 @@ def run_action(manifest: MVPManifest, action: str, dry_run: bool = False) -> int
     print(f"[{manifest.name}] {action_label(action)}")
     print(f"cwd: {manifest.directory}")
     print(f"command: {display_command(command)}")
+    sys.stdout.flush()
 
     if dry_run:
         return 0
 
-    if action in {"run", "test"} and not is_installed(manifest):
+    if action == "test" and not is_installed(manifest):
         raise UserError(
             f"{manifest.name} is not installed yet. Run 'python3 mvp.py install {manifest.name}' first."
         )

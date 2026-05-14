@@ -17,10 +17,11 @@ class MVPManagerTests(unittest.TestCase):
         self.assertIn("MVP001", self.manifests)
         self.assertIn("MVP002", self.manifests)
         self.assertIn("MVP003", self.manifests)
+        self.assertIn("MVP004", self.manifests)
 
     def test_latest_alias_resolves_to_highest_version(self) -> None:
         manifest = mvp_manager.resolve_manifest(self.manifests, "latest")
-        self.assertEqual(manifest.name, "MVP003")
+        self.assertEqual(manifest.name, "MVP004")
 
     def test_numeric_alias_resolves_to_zero_padded_name(self) -> None:
         manifest = mvp_manager.resolve_manifest(self.manifests, "mvp2")
@@ -43,6 +44,7 @@ class MVPManagerTests(unittest.TestCase):
         self.assertIn("MVP001", output)
         self.assertIn("MVP002", output)
         self.assertIn("MVP003", output)
+        self.assertIn("MVP004", output)
 
     def test_find_clean_targets_skips_venv_and_detects_generated_files(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

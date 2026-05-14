@@ -139,3 +139,4 @@ MVP002/networks/stress_cases/*.json
 !MVP003/networks/stress_cases/*.py
 MVP003/networks/stress_cases/*.json
 MVP003/benchmarks/output/
+MVP004/.tools/

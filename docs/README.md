@@ -2,7 +2,7 @@
 
 Esta carpeta documenta la capa comun del repositorio versionado:
 el gestor de MVPs, el flujo de trabajo esperado y el proceso para
-crear nuevas versiones como `MVP004`, `MVP005`, etc.
+crear nuevas versiones como `MVP005`, `MVP006`, etc.
 
 ## Documentos de esta carpeta
 
@@ -23,6 +23,10 @@ crear nuevas versiones como `MVP004`, `MVP005`, etc.
 - [MVP003 INSTALL](../MVP003/INSTALL.txt)
 - [MVP003 GUIA](../MVP003/GUIA_MVP003.md)
 - [MVP003 Docs](../MVP003/docs/README.md)
+- [MVP004 README](../MVP004/README.md)
+- [MVP004 INSTALL](../MVP004/INSTALL.txt)
+- [MVP004 GUIA](../MVP004/GUIA_MVP004.md)
+- [MVP004 Docs](../MVP004/docs/README.md)
 
 ## Alcance
 

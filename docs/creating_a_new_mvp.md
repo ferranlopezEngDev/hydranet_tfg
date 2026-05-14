@@ -1,7 +1,7 @@
 # Crear Un Nuevo MVP
 
 Esta guia documenta el proceso recomendado para anadir una nueva version
-como `MVP004`.
+como `MVP005`.
 
 ## Objetivo
 
@@ -18,26 +18,26 @@ Un nuevo MVP debe poder:
 El gestor no "crea" un MVP por ti. Lo que hace es integrar un MVP ya
 estructurado dentro del flujo comun del repositorio.
 
-Por tanto, para dar de alta `MVP004` hacen falta dos capas:
+Por tanto, para dar de alta `MVP005` hacen falta dos capas:
 
-- la propia carpeta `MVP004/` con su codigo y documentacion,
-- y el manifiesto `MVP004/mvp.json` que ensena al gestor como tratarlo.
+- la propia carpeta `MVP005/` con su codigo y documentacion,
+- y el manifiesto `MVP005/mvp.json` que ensena al gestor como tratarlo.
 
 ## Proceso recomendado
 
 ### 1. Crear la carpeta nueva
 
 ```bash
-mkdir MVP004
+mkdir MVP005
 ```
 
 Lo normal es partir del MVP mas parecido al que quieres construir.
 
 Ejemplos:
 
-- si sera CLI, usar `MVP001` como referencia,
+- si sera CLI, usar `MVP001` como referencia historica,
 - si sera GUI, usar `MVP002` o `MVP003`,
-- si sera framework + GUI, usar `MVP003`.
+- si buscas una base limpia moderna, partir de `MVP004`.
 
 ### 2. Definir la estructura minima
 
@@ -86,7 +86,7 @@ comandos directamente en `mvp.json`.
 Esto reduce archivos, pero hace el manifiesto menos legible si la
 instalacion empieza a crecer.
 
-## 4. Crear `MVP004/mvp.json`
+## 4. Crear `MVP005/mvp.json`
 
 Sin este archivo, el gestor no vera el MVP.
 
@@ -94,8 +94,8 @@ Sin este archivo, el gestor no vera el MVP.
 
 ```json
 {
-  "name": "MVP004",
-  "display_name": "Hydranet MVP004",
+  "name": "MVP005",
+  "display_name": "Hydranet MVP005",
   "description": "Resumen corto del objetivo del MVP.",
   "kind": "gui",
   "python_min": "Python 3.11+",
@@ -122,7 +122,7 @@ Sin este archivo, el gestor no vera el MVP.
 
 ### Reglas importantes
 
-- `name` debe ser exactamente `MVP004` si la carpeta se llama `MVP004`.
+- `name` debe ser exactamente `MVP005` si la carpeta se llama `MVP005`.
 - `install`, `run` y `test` son obligatorios.
 - `documents` debe apuntar a rutas utiles para humanos.
 - Las rutas se resuelven desde dentro de la carpeta del MVP.
@@ -143,10 +143,10 @@ Antes de instalar de verdad:
 
 ```bash
 python3 mvp.py list
-python3 mvp.py info MVP004
-python3 mvp.py install MVP004 --dry-run
-python3 mvp.py run MVP004 --dry-run
-python3 mvp.py test MVP004 --dry-run
+python3 mvp.py info MVP005
+python3 mvp.py install MVP005 --dry-run
+python3 mvp.py run MVP005 --dry-run
+python3 mvp.py test MVP005 --dry-run
 ```
 
 Esto comprueba:
@@ -158,7 +158,7 @@ Esto comprueba:
 Si durante las pruebas generas caches locales y quieres limpiar el arbol:
 
 ```bash
-python3 mvp.py clean MVP004
+python3 mvp.py clean MVP005
 ```
 
 ## 7. Ejecutar la validacion real
@@ -166,23 +166,23 @@ python3 mvp.py clean MVP004
 Despues:
 
 ```bash
-python3 mvp.py install MVP004
-python3 mvp.py run MVP004
-python3 mvp.py test MVP004
+python3 mvp.py install MVP005
+python3 mvp.py run MVP005
+python3 mvp.py test MVP005
 ```
 
 Si el MVP tiene chequeos de instalacion extendidos:
 
 ```bash
-python3 mvp.py install MVP004 --checks
+python3 mvp.py install MVP005 --checks
 ```
 
 ## Checklist de salida
 
-Antes de considerar que `MVP004` esta bien integrado, revisar:
+Antes de considerar que `MVP005` esta bien integrado, revisar:
 
 - aparece en `python3 mvp.py list`
-- `python3 mvp.py info MVP004` muestra metadata correcta
+- `python3 mvp.py info MVP005` muestra metadata correcta
 - la instalacion funciona
 - el arranque funciona
 - los tests funcionan
@@ -247,5 +247,5 @@ La regla general es:
 - mucha explicitez,
 - y cada MVP responsable de sus propios detalles.
 
-Eso hace mas facil que `MVP004`, `MVP005` y siguientes convivan sin que
+Eso hace mas facil que `MVP005`, `MVP006` y siguientes convivan sin que
 el gestor se convierta en una caja negra.

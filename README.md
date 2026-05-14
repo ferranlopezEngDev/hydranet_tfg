@@ -11,7 +11,7 @@ python3 mvp.py list
 python3 mvp.py info latest
 python3 mvp.py install MVP001
 python3 mvp.py run MVP002
-python3 mvp.py test MVP003
+python3 mvp.py test MVP004
 python3 mvp.py clean
 ```
 
@@ -36,10 +36,23 @@ Workspace-level documentation now lives in:
 - [MVP003](MVP003/README.md): current working version with a clearer
   framework API, declarative parameter metadata, framework-native solve
   results, and a faster incident-connection index.
+- [MVP004](MVP004/README.md): new clean base with a desktop GUI, a
+  technical CLI, one canonical API, strict JSON, and no runtime
+  backwards compatibility.
+
+## Latest Base
+
+The new forward-looking base now lives in `MVP004/`:
+
+- [MVP004 README](MVP004/README.md)
+- [MVP004 INSTALL](MVP004/INSTALL.txt)
+- [MVP004 Guide](MVP004/GUIA_MVP004.md)
+- [MVP004 Docs](MVP004/docs/README.md)
 
 ## MVP003 Documentation
 
-The current detailed documentation lives inside `MVP003/docs/`:
+Historical detailed framework and GUI documentation still lives inside
+`MVP003/docs/`:
 
 - [Documentation Map](MVP003/docs/README.md)
 - [Physical And Mathematical Foundations](MVP003/docs/fundamentos_fisicos_y_matematicos.md)
@@ -49,41 +62,44 @@ The current detailed documentation lives inside `MVP003/docs/`:
 ## Working Convention
 
 Each future major refactor can live in its own top-level folder
-(`MVP002/`, `MVP003/`, etc.) so structural changes do not require
+(`MVP002/`, `MVP003/`, `MVP004/`, etc.) so structural changes do not require
 rewriting the previous milestone in place.
 
 ## Quick Start
 
 ```bash
-cd MVP003
-python -m unittest discover -s test -p 'test_*.py'
-python src/gui_app.py
+cd MVP004
+bash install.sh
+bash run.sh
+source .venv/bin/activate
+python -m unittest discover -s tests -p 'test_*.py'
+hydranet demo
 ```
 
-Public framework usage now starts from:
+Public core usage now starts from:
 
 ```python
-from hydranet import HydraulicSystem, Node
-from hydranet.connections import FixedKQn_pipe
-from hydranet.solvers import solve
+from hydranet import Connection, Network, Node, PowerLawPipe, solve_network
 
-system = HydraulicSystem()
-system.addNode("source", Node(piezometricHead=100.0, isBoundary=True))
-system.addNode("demand", Node(piezometricHead=95.0, externalFlow=0.12))
-system.addConnection(
-    "pipe_1",
-    FixedKQn_pipe(k=1469.0, n=1.974),
-    "source",
-    "demand",
+network = Network(name="single_pipe")
+network.add_node(Node(id="source", head=100.0, is_boundary=True))
+network.add_node(Node(id="demand", head=95.0, demand=0.12))
+network.add_connection(
+    Connection(
+        id="pipe_1",
+        from_node="source",
+        to_node="demand",
+        model=PowerLawPipe(coefficient=1000.0, exponent=2.0),
+    )
 )
 
-result = solve(system, initialHeads=(95.0,))
+result = solve_network(network, initial_heads=(95.0,))
 print(result.success)
-print(result.node_heads)
-print(result.connection_flows)
+print(result.node_heads["demand"])
+print(result.connection_flows["pipe_1"])
 ```
 
-Historical MVP001 CLI still runs from:
+Historical versions still run from their own folders:
 
 ```bash
 cd MVP001

@@ -1,0 +1,32 @@
+{
+  "connections": [
+    {
+      "from_node": "source",
+      "id": "pipe_1",
+      "parameters": {
+        "coefficient": 1000.0,
+        "exponent": 2.0
+      },
+      "to_node": "demand",
+      "type": "power_law_pipe"
+    }
+  ],
+  "name": "single_pipe_demo",
+  "nodes": [
+    {
+      "demand": 0.0,
+      "elevation": 0.0,
+      "head": 100.0,
+      "id": "source",
+      "is_boundary": true
+    },
+    {
+      "demand": 0.12,
+      "elevation": 0.0,
+      "head": 95.0,
+      "id": "demand",
+      "is_boundary": false
+    }
+  ],
+  "schema_version": 1
+}

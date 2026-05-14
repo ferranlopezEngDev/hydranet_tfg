@@ -1,0 +1,129 @@
+MVP004 - INSTALLATION AND QUICK START
+=====================================
+
+`MVP004` es la nueva base limpia del proyecto.
+
+REQUISITOS
+----------
+- Acceso a internet para instalar dependencias.
+- Soporte `tkinter`.
+
+Si no existe un `Python 3.11+` compatible, los instaladores intentan
+bootstrapear `uv` y descargar una version gestionada de Python antes de
+crear `.venv`.
+
+Nota Linux:
+- en algunas distribuciones puede hacer falta instalar `python3-tk`
+  desde el gestor de paquetes del sistema.
+
+
+INSTALACION RAPIDA EN LINUX / MACOS
+-----------------------------------
+1. Entrar en `MVP004`.
+2. Ejecutar:
+
+   bash install.sh
+
+3. Lanzar la app de escritorio:
+
+   bash run.sh
+
+   Si `.venv` no existe todavia, `run.sh` intentara instalar primero.
+
+4. O ejecutar directamente el entry point principal:
+
+   source .venv/bin/activate
+   python src/main.py
+
+5. O usar el comando instalable del paquete:
+
+   source .venv/bin/activate
+   hydranet
+
+
+INSTALACION RAPIDA EN WINDOWS
+-----------------------------
+1. Abrir `cmd` o PowerShell dentro de `MVP004`.
+2. Ejecutar:
+
+   install_windows.cmd
+
+3. Lanzar la app de escritorio:
+
+   run_windows.cmd
+
+   Si `.venv` no existe todavia, `run_windows.cmd` intentara instalar primero.
+
+4. O ejecutar directamente el entry point principal:
+
+   python src\main.py
+
+
+INSTALACION MANUAL
+------------------
+1. Crear el entorno virtual.
+2. Activarlo.
+3. Instalar el paquete editable:
+
+   python -m pip install --upgrade pip setuptools wheel
+   python -m pip install -e .
+
+
+COMANDOS UTILES
+---------------
+Abrir la app de escritorio:
+
+   python src/main.py
+
+Abrir la app usando el comando del paquete:
+
+   hydranet
+
+Usar la CLI sobre la red de ejemplo:
+
+   hydranet validate examples/single_pipe.json
+   python -m hydranet validate examples/single_pipe.json
+
+Resolver la red de ejemplo:
+
+   hydranet solve examples/single_pipe.json --initial-heads 95.0
+   python -m hydranet solve examples/single_pipe.json --initial-heads 95.0
+
+Resolver con seguimiento de curvas y sacar la traza en CSV:
+
+   hydranet solve examples/single_pipe.json --solver continuation_solver --continuation-steps 8 --trace-csv
+
+Listar modelos registrados:
+
+   hydranet models
+   python -m hydranet models
+
+
+VERIFICACION OPCIONAL
+---------------------
+Los instaladores soportan una pasada completa de chequeos:
+
+- Linux / macOS:
+
+     RUN_CHECKS=1 bash install.sh
+
+- Windows:
+
+     install_windows.cmd -RunChecks
+
+
+ARCHIVOS CLAVE
+--------------
+- `README.md`
+- `GUIA_MVP004.md`
+- `docs/`
+- `examples/`
+- `src/hydranet/`
+- `tests/`
+
+
+NOTAS
+-----
+- El formato JSON de `MVP004` es estricto y no acepta aliases legacy.
+- `MVP004` abre la GUI por defecto y conserva CLI para automatizacion.
+- El auto-bootstrap de Python usa `uv` de Astral y requiere acceso a red.

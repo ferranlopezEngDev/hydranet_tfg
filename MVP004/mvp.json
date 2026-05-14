@@ -1,0 +1,32 @@
+{
+  "name": "MVP004",
+  "display_name": "Hydranet MVP004",
+  "description": "New clean base with a canonical API, desktop GUI, strict JSON schema, and zero runtime backwards compatibility.",
+  "kind": "core + gui + cli",
+  "python_min": "Python 3.11+",
+  "documents": [
+    "README.md",
+    "INSTALL.txt",
+    "GUIA_MVP004.md",
+    "docs/README.md",
+    "docs/architecture.md"
+  ],
+  "commands": {
+    "install": {
+      "posix": ["bash", "install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd"]
+    },
+    "install_checks": {
+      "posix": ["bash", "-lc", "RUN_CHECKS=1 bash install.sh"],
+      "windows": ["cmd", "/c", "install_windows.cmd", "-RunChecks"]
+    },
+    "run": {
+      "posix": ["bash", "run.sh"],
+      "windows": ["cmd", "/c", "run_windows.cmd"]
+    },
+    "test": {
+      "posix": ["{venv_python}", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"],
+      "windows": ["{venv_python}", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]
+    }
+  }
+}
