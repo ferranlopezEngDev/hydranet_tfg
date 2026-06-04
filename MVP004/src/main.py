@@ -1,6 +1,6 @@
-"""Direct entry point for the MVP004 final application."""
+"""Direct command-line entry point for MVP004."""
 
-from hydranet.launcher import main
+from hydranet.cli import main
 
 
 if __name__ == "__main__":
