@@ -21,7 +21,7 @@
     "4": {
       "piezometricHead": 80.0,
       "elevation": 0.0,
-      "externalFlow": 0.06,
+      "externalFlow": 0.0,
       "isBoundary": false
     }
   },
